@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"github.com/joho/godotenv"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -20,6 +18,11 @@ func main() {
 		log.Fatal("FILEPATH_ROOT environment variable not set")
 	}
 
+	assetsRoot := os.Getenv("ASSETS_ROOT")
+	if assetsRoot == "" {
+		log.Fatal("ASSETS_ROOT environment variable not set")
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		log.Fatal("PORT environment variable not set")
@@ -29,24 +32,11 @@ func main() {
 	appHandler := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
 	mux.Handle("/app", appHandler)
 
-	mux.HandleFunc("/pet/{petID}", func(w http.ResponseWriter, r *http.Request) {
-		petID := r.PathValue("petID")
-		fmt.Println("Hello,", petID)
-		// serve an html template
-		data := struct {
-			PetName string
-		}{
-			PetName: petID,
-		}
+	assetHandler := http.StripPrefix("/assets", http.FileServer(http.Dir(assetsRoot)))
+	mux.Handle("/assets/", assetHandler)
 
-		tmpl := template.Must(template.ParseFiles("app/templates/pet.html"))
-
-		err := tmpl.Execute(w, data)
-
-		if err != nil {
-			fmt.Println(err)
-		}
-	})
+	mux.HandleFunc("/pet/{pet_id}", handlePetConnect)
+	mux.HandleFunc("/pet/{pet_id}/ws", handlePetWebsocketConnection)
 
 	srv := &http.Server{
 		Addr:    ":" + port,

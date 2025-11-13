@@ -6,5 +6,13 @@
 </head>
 <body>
 <h1>{{ .PetName }}</h1>
+<image src="{{ .ImageURL }}"></image>
+<script>
+    const pet_id = {{ .PetID }}
+    const ws = new WebSocket(`ws://localhost:8082/pet/${pet_id}/ws`)
+    ws.onopen = () => {
+        console.log("Connected successfully")
+    }
+</script>
 </body>
 </html>
