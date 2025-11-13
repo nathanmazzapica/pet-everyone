@@ -39,11 +39,12 @@ func handlePetConnect(w http.ResponseWriter, r *http.Request) {
 }
 
 // handlePetWebsocketConnection directs the user to the appropriate websocket hub for their chosen pet
-func handlePetWebsocketConnection(w http.ResponseWriter, r *http.Request) {
+func handlePetWebsocketConnection(w http.ResponseWriter, r *http.Request, registry *websocket.HubRegistry) {
 	petID := r.PathValue("pet_id")
 	log.Println("Connecting to pet{", petID, "}")
-	test := websocket.NewHub()
-	go test.Run()
-	websocket.ServeWs(test, w, r)
+
+	hub := registry.GetOrCreateHub(petID)
+	log.Println(hub)
+	websocket.ServeWs(hub, w, r)
 
 }

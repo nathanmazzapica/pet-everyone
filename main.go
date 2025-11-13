@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"pet-everyone/internal/websocket"
 )
 
 func main() {
@@ -28,6 +29,8 @@ func main() {
 		log.Fatal("PORT environment variable not set")
 	}
 
+	hubRegistry := websocket.NewHubRegistry()
+
 	mux := http.NewServeMux()
 	appHandler := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
 	mux.Handle("/app", appHandler)
@@ -36,7 +39,9 @@ func main() {
 	mux.Handle("/assets/", assetHandler)
 
 	mux.HandleFunc("/pet/{pet_id}", handlePetConnect)
-	mux.HandleFunc("/pet/{pet_id}/ws", handlePetWebsocketConnection)
+	mux.HandleFunc("/pet/{pet_id}/ws", func(w http.ResponseWriter, r *http.Request) {
+		handlePetWebsocketConnection(w, r, hubRegistry)
+	})
 
 	srv := &http.Server{
 		Addr:    ":" + port,
