@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/joho/godotenv"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -32,6 +33,19 @@ func main() {
 		petID := r.PathValue("petID")
 		fmt.Println("Hello,", petID)
 		// serve an html template
+		data := struct {
+			PetName string
+		}{
+			PetName: petID,
+		}
+
+		tmpl := template.Must(template.ParseFiles("app/templates/pet.html"))
+
+		err := tmpl.Execute(w, data)
+
+		if err != nil {
+			fmt.Println(err)
+		}
 	})
 
 	srv := &http.Server{
