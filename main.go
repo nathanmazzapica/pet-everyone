@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
@@ -26,6 +27,12 @@ func main() {
 	mux := http.NewServeMux()
 	appHandler := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
 	mux.Handle("/app", appHandler)
+
+	mux.HandleFunc("/pet/{petID}", func(w http.ResponseWriter, r *http.Request) {
+		petID := r.PathValue("petID")
+		fmt.Println("Hello,", petID)
+		// serve an html template
+	})
 
 	srv := &http.Server{
 		Addr:    ":" + port,
