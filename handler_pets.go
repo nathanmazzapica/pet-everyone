@@ -4,18 +4,31 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"pet-everyone/internal/db"
 	"pet-everyone/internal/registry"
 	"pet-everyone/internal/websocket"
 )
 
-// temporary for testing
-type Pet struct {
-	ID       int
-	Name     string
-	ImageURL string
+func (c *apiConfig) handleHome(w http.ResponseWriter, r *http.Request) {
+	pets, err := c.db.GetAllPets()
+	if err != nil {
+		respondWithError(w, 500, "unable to load pets", err)
+	}
+	data := struct {
+		Pets []db.Pet
+	}{
+		Pets: pets,
+	}
+
+	tmpl := template.Must(template.ParseFiles("app/templates/home.html"))
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		respondWithError(w, 500, "unable to load pets", err)
+	}
 }
 
-func handlePetConnect(w http.ResponseWriter, r *http.Request) {
+func (c *apiConfig) handlePetConnect(w http.ResponseWriter, r *http.Request) {
 	petID := r.PathValue("pet_id")
 	log.Println("Handling connection for pet{", petID, "}")
 
@@ -40,11 +53,11 @@ func handlePetConnect(w http.ResponseWriter, r *http.Request) {
 }
 
 // handlePetWebsocketConnection directs the user to the appropriate websocket hub for their chosen pet
-func handlePetWebsocketConnection(w http.ResponseWriter, r *http.Request, registry *registry.HubRegistry) {
+func (c *apiConfig) handlePetWebsocketConnection(w http.ResponseWriter, r *http.Request, reg *registry.HubRegistry) {
 	petID := r.PathValue("pet_id")
 	log.Println("Connecting to pet{", petID, "}")
 
-	hub := registry.GetOrCreateHub(petID)
+	hub := reg.GetOrCreateHub(petID)
 	log.Println(hub)
 	websocket.ServeWs(hub, w, r)
 

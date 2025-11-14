@@ -3,7 +3,7 @@ package db
 import "time"
 
 type Pet struct {
-	petID       string    `sql:"pet_id"`
+	PetID       string    `sql:"pet_id"`
 	Name        string    `sql:"pet_name"`
 	createdAt   time.Time `sql:"created_at"`
 	updatedAt   time.Time `sql:"updated_at"`
@@ -24,7 +24,7 @@ func (c Client) GetAllPets() ([]Pet, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var pet Pet
-		err := rows.Scan(&pet.petID, &pet.Name, &pet.createdAt, &pet.updatedAt, &pet.Visibility, &pet.userID, &pet.activeImage)
+		err := rows.Scan(&pet.PetID, &pet.Name, &pet.createdAt, &pet.updatedAt, &pet.Visibility, &pet.userID, &pet.activeImage)
 		if err != nil {
 			return nil, err
 		}

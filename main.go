@@ -10,6 +10,10 @@ import (
 	"pet-everyone/internal/registry"
 )
 
+type apiConfig struct {
+	db db.Client
+}
+
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -31,16 +35,14 @@ func main() {
 		log.Fatal("PORT environment variable not set")
 	}
 
-	cfg := db.LoadConfig()
-
-	conn, err := db.Connect(cfg)
+	client, err := db.Connect(db.LoadConfig())
 	if err != nil {
 		log.Fatalf("Error connecting to db: %v", err)
 	}
 
-	fmt.Println("Connected to db")
+	cfg := apiConfig{db: client}
 
-	_ = conn
+	fmt.Println("Connected to db")
 
 	hubRegistry := registry.NewHubRegistry()
 
@@ -51,9 +53,10 @@ func main() {
 	assetHandler := http.StripPrefix("/assets", http.FileServer(http.Dir(assetsRoot)))
 	mux.Handle("/assets/", assetHandler)
 
-	mux.HandleFunc("/pet/{pet_id}", handlePetConnect)
+	mux.HandleFunc("/", cfg.handleHome)
+	mux.HandleFunc("/pet/{pet_id}", cfg.handlePetConnect)
 	mux.HandleFunc("/pet/{pet_id}/ws", func(w http.ResponseWriter, r *http.Request) {
-		handlePetWebsocketConnection(w, r, hubRegistry)
+		cfg.handlePetWebsocketConnection(w, r, hubRegistry)
 	})
 
 	srv := &http.Server{

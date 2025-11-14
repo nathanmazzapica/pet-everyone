@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+{{ range .Pets }}
+    <div>
+        <a href="/pet/{{ .PetID }}">{{ .Name }}</a>
+    </div>
+{{ end }}
+</body>
+</html>
