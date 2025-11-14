@@ -13,6 +13,7 @@ func (c *apiConfig) handleHome(w http.ResponseWriter, r *http.Request) {
 	pets, err := c.db.GetAllPets()
 	if err != nil {
 		respondWithError(w, 500, "unable to load pets", err)
+		return
 	}
 	data := struct {
 		Pets []db.Pet
@@ -25,6 +26,7 @@ func (c *apiConfig) handleHome(w http.ResponseWriter, r *http.Request) {
 	err = tmpl.Execute(w, data)
 	if err != nil {
 		respondWithError(w, 500, "unable to load pets", err)
+		return
 	}
 }
 
@@ -33,20 +35,27 @@ func (c *apiConfig) handlePetConnect(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling connection for pet{", petID, "}")
 
 	// Get pet metadata from db
+	pet, err := c.db.GetPetByID(petID)
+	if err != nil {
+		respondWithError(w, 500, "unable to load pet", err)
+		return
+	}
+
+	image := c.db.GetPetImage(*pet.ActiveImage)
 
 	data := struct {
 		PetName  string
 		PetID    string
 		ImageURL string
 	}{
-		PetName:  "not implemented",
+		PetName:  pet.Name,
 		PetID:    petID,
-		ImageURL: "/assets/DAISY.png",
+		ImageURL: image,
 	}
 
 	tmpl := template.Must(template.ParseFiles("app/templates/pet.html"))
 
-	err := tmpl.Execute(w, data)
+	err = tmpl.Execute(w, data)
 	if err != nil {
 		respondWithError(w, 500, "failed to populate template", err)
 	}
