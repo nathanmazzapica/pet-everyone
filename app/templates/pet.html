@@ -13,6 +13,10 @@
     ws.onopen = () => {
         console.log("Connected successfully")
     }
+
+    ws.onmessage = (data) => {
+        console.log(data)
+    }
 </script>
 </body>
 </html>

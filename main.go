@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"os"
-	"pet-everyone/internal/websocket"
+	"pet-everyone/internal/database"
+	"pet-everyone/internal/registry"
 )
 
 func main() {
@@ -29,7 +31,18 @@ func main() {
 		log.Fatal("PORT environment variable not set")
 	}
 
-	hubRegistry := websocket.NewHubRegistry()
+	cfg := database.LoadConfig()
+
+	conn, err := database.Connect(cfg)
+	if err != nil {
+		log.Fatalf("Error connecting to database: %v", err)
+	}
+
+	fmt.Println("Connected to database")
+
+	_ = conn
+
+	hubRegistry := registry.NewHubRegistry()
 
 	mux := http.NewServeMux()
 	appHandler := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
