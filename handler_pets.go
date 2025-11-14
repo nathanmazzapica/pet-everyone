@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"pet-everyone/internal/registry"
 	"pet-everyone/internal/websocket"
 )
 
@@ -39,7 +40,7 @@ func handlePetConnect(w http.ResponseWriter, r *http.Request) {
 }
 
 // handlePetWebsocketConnection directs the user to the appropriate websocket hub for their chosen pet
-func handlePetWebsocketConnection(w http.ResponseWriter, r *http.Request, registry *websocket.HubRegistry) {
+func handlePetWebsocketConnection(w http.ResponseWriter, r *http.Request, registry *registry.HubRegistry) {
 	petID := r.PathValue("pet_id")
 	log.Println("Connecting to pet{", petID, "}")
 

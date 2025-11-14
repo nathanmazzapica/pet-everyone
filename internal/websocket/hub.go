@@ -1,6 +1,8 @@
 package websocket
 
-import "log"
+import (
+	"log"
+)
 
 type Hub struct {
 	id        string
@@ -44,4 +46,12 @@ func (h *Hub) Run() {
 			}
 		}
 	}
+}
+
+func (h *Hub) Clean() {
+	for client := range h.clients {
+		client.send <- []byte("shutdown")
+		h.unregister <- client
+	}
+	log.Printf("[HUB %s]: Goodbye...", h.id)
 }
