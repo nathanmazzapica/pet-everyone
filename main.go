@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"pet-everyone/internal/database"
+	"pet-everyone/internal/db"
 	"pet-everyone/internal/registry"
 )
 
@@ -31,14 +31,14 @@ func main() {
 		log.Fatal("PORT environment variable not set")
 	}
 
-	cfg := database.LoadConfig()
+	cfg := db.LoadConfig()
 
-	conn, err := database.Connect(cfg)
+	conn, err := db.Connect(cfg)
 	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
+		log.Fatalf("Error connecting to db: %v", err)
 	}
 
-	fmt.Println("Connected to database")
+	fmt.Println("Connected to db")
 
 	_ = conn
 
