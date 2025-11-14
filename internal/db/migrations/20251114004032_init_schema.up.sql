@@ -13,7 +13,8 @@ CREATE TABLE RegisteredUser (
 );
 
 CREATE TABLE PetImage (
-    image_id UUID PRIMARY KEY NOT NULL,
+    image_id SERIAL PRIMARY KEY NOT NULL,
+    image_url TEXT NOT NULL DEFAULT '/assets/placeholder.jpg',
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -24,7 +25,7 @@ CREATE TABLE Pet (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     visibility BOOLEAN NOT NULL DEFAULT TRUE,
     user_id UUID,
-    active_image UUID,
+    active_image SERIAL,
 
     FOREIGN KEY (user_id) REFERENCES RegisteredUser(user_id),
     FOREIGN KEY (active_image) REFERENCES PetImage(image_id)
