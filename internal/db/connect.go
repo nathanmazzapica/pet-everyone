@@ -17,6 +17,10 @@ type Config struct {
 	SSLMode  string
 }
 
+type Client struct {
+	db *sql.DB
+}
+
 func LoadConfig() Config {
 	return Config{
 		Host:     os.Getenv("DB_HOST"),
@@ -40,15 +44,15 @@ func (c Config) DSN() string {
 	)
 }
 
-func Connect(cfg Config) (*sql.DB, error) {
+func Connect(cfg Config) (Client, error) {
 	db, err := sql.Open("pgx", cfg.DSN())
 	if err != nil {
-		return nil, err
+		return Client{}, err
 	}
 
 	if err := db.Ping(); err != nil {
-		return nil, err
+		return Client{}, err
 	}
 
-	return db, nil
+	return Client{db}, nil
 }
