@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>New Pet</title>
+</head>
+<body>
+<h1>Create New Pet</h1>
+<div id="form-section">
+    <form id="new-pet-form">
+      <label for="pet-name-input">Name</label>
+      <input type="text" id="pet-name-input" required/>
+      <br>
+      <label for="pet-image-input">Image</label>
+      <input type="file" id="pet-image-input" accept="image/*" required/>
+      <img id="pet-image" />
+      <button type="submit">create!</button>
+    </form>
+</div>
+<script src="/app/create.js"></script>
+</body>
+</html>

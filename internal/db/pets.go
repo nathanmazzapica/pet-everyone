@@ -1,6 +1,7 @@
 package db
 
 import (
+	"github.com/google/uuid"
 	"log"
 	"time"
 )
@@ -75,4 +76,21 @@ func (c Client) GetPetImage(id string) string {
 	}
 
 	return imageURL
+}
+
+func (c Client) CreatePet(pet *Pet) error {
+	query := `INSERT INTO pet (pet_id, pet_name, visibility, active_image) VALUES ($1, $2, $3, $4);`
+
+	pet.PetID = uuid.New().String()
+	_, err := c.db.Exec(query, pet.PetID, pet.Name, pet.Visibility, pet.ActiveImage)
+
+	return err
+}
+
+func (c Client) CreatePetImage(imageURL string) (string, error) {
+	query := `INSERT INTO PetImage (image_url) VALUES ($1) RETURNING image_id;`
+	var id string
+	err := c.db.QueryRow(query, imageURL).Scan(&id)
+
+	return id, err
 }

@@ -11,7 +11,9 @@ import (
 )
 
 type apiConfig struct {
-	db db.Client
+	db         db.Client
+	assetsRoot string
+	port       string
 }
 
 func main() {
@@ -40,7 +42,16 @@ func main() {
 		log.Fatalf("Error connecting to db: %v", err)
 	}
 
-	cfg := apiConfig{db: client}
+	cfg := apiConfig{
+		db:         client,
+		assetsRoot: assetsRoot,
+		port:       port,
+	}
+
+	err = cfg.ensureAssetsDir()
+	if err != nil {
+		log.Fatalf("Couldn't create assets directory: %v", err)
+	}
 
 	fmt.Println("Connected to db")
 
@@ -48,7 +59,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	appHandler := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
-	mux.Handle("/app", appHandler)
+	mux.Handle("/app/", appHandler)
 
 	assetHandler := http.StripPrefix("/assets", http.FileServer(http.Dir(assetsRoot)))
 	mux.Handle("/assets/", assetHandler)
@@ -58,6 +69,11 @@ func main() {
 	mux.HandleFunc("/pet/{pet_id}/ws", func(w http.ResponseWriter, r *http.Request) {
 		cfg.handlePetWebsocketConnection(w, r, hubRegistry)
 	})
+
+	mux.HandleFunc("/pet/create", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepathRoot+"/pet/create.html")
+	})
+	mux.HandleFunc("/pet/create/submit", cfg.handlerCreatePet)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
