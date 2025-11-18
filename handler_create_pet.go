@@ -91,5 +91,4 @@ func (cfg *apiConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusCreated, pet)
-
 }
