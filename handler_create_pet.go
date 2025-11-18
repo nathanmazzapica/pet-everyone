@@ -9,7 +9,7 @@ import (
 	"pet-everyone/internal/db"
 )
 
-func (cfg *apiConfig) handlerCreatePet(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		respondWithError(w, http.StatusMethodNotAllowed, "forbidden method", nil)
 		return
@@ -47,8 +47,14 @@ func (cfg *apiConfig) handlerCreatePet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	assetPath := getAssetPath(mediaType)
-	assetDiskPath := cfg.getAssetDiskPath(assetPath)
+	assetDiskPath, err := cfg.getAssetDiskPath(assetPath)
 
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Unable to get asset disk path", err)
+		return
+	}
+
+	// #nosec G304 -- assetDiskPath is server-generated and sanitized in getAssetDiskPath
 	dst, err := os.Create(assetDiskPath)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to create file", err)

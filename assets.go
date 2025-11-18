@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,7 +12,7 @@ import (
 
 func (cfg apiConfig) ensureAssetsDir() error {
 	if _, err := os.Stat(cfg.assetsRoot); os.IsNotExist(err) {
-		return os.Mkdir(cfg.assetsRoot, 0755)
+		return os.Mkdir(cfg.assetsRoot, 0750)
 	}
 	return nil
 }
@@ -27,8 +28,20 @@ func getAssetPath(mediaType string) string {
 	return fmt.Sprintf("%s%s", id, ext)
 }
 
-func (cfg apiConfig) getAssetDiskPath(assetPath string) string {
-	return filepath.Join(cfg.assetsRoot, assetPath)
+func (cfg apiConfig) getAssetDiskPath(assetPath string) (string, error) {
+	rootAbs, err := filepath.Abs(cfg.assetsRoot)
+	if err != nil {
+		return "", err
+	}
+
+	joined := filepath.Join(rootAbs, assetPath)
+	cleaned := filepath.Clean(joined)
+
+	if strings.HasPrefix(cleaned, rootAbs) {
+		return cleaned, nil
+	}
+
+	return "", errors.New("asset path is outside of assets root")
 }
 
 func (cfg apiConfig) getAssetURL(assetPath string) string {
