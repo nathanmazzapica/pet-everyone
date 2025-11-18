@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"os"
 	"pet-everyone/internal/db"
 	"pet-everyone/internal/registry"
+	"time"
+
+	"github.com/joho/godotenv"
 )
 
 type apiConfig struct {
@@ -64,20 +66,22 @@ func main() {
 	assetHandler := http.StripPrefix("/assets", http.FileServer(http.Dir(assetsRoot)))
 	mux.Handle("/assets/", assetHandler)
 
-	mux.HandleFunc("/", cfg.handleHome)
+	mux.HandleFunc("/", cfg.serveHome)
 	mux.HandleFunc("/pet/{pet_id}", cfg.handlePetConnect)
 	mux.HandleFunc("/pet/{pet_id}/ws", func(w http.ResponseWriter, r *http.Request) {
-		cfg.handlePetWebsocketConnection(w, r, hubRegistry)
+		cfg.servePetWebsocket(w, r, hubRegistry)
 	})
 
 	mux.HandleFunc("/pet/create", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepathRoot+"/pet/create.html")
 	})
-	mux.HandleFunc("/pet/create/submit", cfg.handlerCreatePet)
+	mux.HandleFunc("/pet/create/submit", cfg.handleCreatePet)
 
 	srv := &http.Server{
-		Addr:    ":" + port,
-		Handler: mux,
+		Addr:              ":" + port,
+		Handler:           mux,
+		ReadHeaderTimeout: 3 * time.Second,
+		ReadTimeout:       10 * time.Second,
 	}
 
 	log.Printf("Serving on http://localhost:%s/app\n", port)
