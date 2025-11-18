@@ -1,7 +1,6 @@
 package main
 
 import (
-	"html/template"
 	"log"
 	"net/http"
 	"pet-everyone/internal/db"
@@ -21,12 +20,8 @@ func (c *apiConfig) serveHome(w http.ResponseWriter, _ *http.Request) {
 		Pets: pets,
 	}
 
-	tmpl := template.Must(template.ParseFiles("app/templates/home.html"))
-
-	err = tmpl.Execute(w, data)
-	if err != nil {
-		respondWithError(w, 500, "unable to load pets", err)
-		return
+	if err := render(w, "home", data); err != nil {
+		respondWithError(w, 500, "failed to populate template", err)
 	}
 }
 
@@ -53,10 +48,7 @@ func (c *apiConfig) handlePetConnect(w http.ResponseWriter, r *http.Request) {
 		ImageURL: image,
 	}
 
-	tmpl := template.Must(template.ParseFiles("app/templates/pet.html"))
-
-	err = tmpl.Execute(w, data)
-	if err != nil {
+	if err := render(w, "pet", data); err != nil {
 		respondWithError(w, 500, "failed to populate template", err)
 	}
 }
