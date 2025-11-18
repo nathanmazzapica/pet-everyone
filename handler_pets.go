@@ -9,7 +9,7 @@ import (
 	"pet-everyone/internal/websocket"
 )
 
-func (c *apiConfig) handleHome(w http.ResponseWriter, r *http.Request) {
+func (c *apiConfig) serveHome(w http.ResponseWriter, _ *http.Request) {
 	pets, err := c.db.GetAllPets()
 	if err != nil {
 		respondWithError(w, 500, "unable to load pets", err)
@@ -61,8 +61,8 @@ func (c *apiConfig) handlePetConnect(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handlePetWebsocketConnection directs the user to the appropriate websocket hub for their chosen pet
-func (c *apiConfig) handlePetWebsocketConnection(w http.ResponseWriter, r *http.Request, reg *registry.HubRegistry) {
+// servePetWebsocket directs the user to the appropriate websocket hub for their chosen pet
+func (c *apiConfig) servePetWebsocket(w http.ResponseWriter, r *http.Request, reg *registry.HubRegistry) {
 	petID := r.PathValue("pet_id")
 	log.Println("Connecting to pet{", petID, "}")
 
