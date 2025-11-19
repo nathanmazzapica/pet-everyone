@@ -17,7 +17,11 @@ func (cfg *apiConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
 
 	const maxMemory = 10 << 20
 
-	r.ParseMultipartForm(maxMemory)
+	err := r.ParseMultipartForm(maxMemory)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "unable to parse multipart form", err)
+		return
+	}
 
 	// TODO: add validation & moderation
 	petName := r.FormValue("petName")
