@@ -5,16 +5,6 @@
 
     <img src="{{ .ImageURL }}" alt="{{ .PetName }}">
 
-    <script>
-		const pet_id = {{ .PetID }};
-		const ws = new WebSocket(`ws://localhost:8082/pet/${pet_id}/ws`);
-
-		ws.onopen = () => {
-			console.log("Connected successfully");
-		};
-
-		ws.onmessage = (data) => {
-			console.log(data);
-		};
-    </script>
+    <script>const pet_id = "{{ .PetID }}";</script>
+    <script src="/app/pet.js"></script>
 {{ end }}
