@@ -58,7 +58,7 @@ func (c *apiConfig) servePetWebsocket(w http.ResponseWriter, r *http.Request, re
 	petID := r.PathValue("pet_id")
 	log.Println("Connecting to pet{", petID, "}")
 
-	hub := reg.GetOrCreateHub(petID)
+	hub, _ := reg.GetOrCreateHub(petID)
 	log.Println(hub)
 	websocket.ServeWs(hub, w, r)
 

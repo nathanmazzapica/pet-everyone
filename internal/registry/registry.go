@@ -18,9 +18,11 @@ func NewHubRegistry() *HubRegistry {
 	}
 }
 
-func (h *HubRegistry) GetOrCreateHub(id string) *websocket.Hub {
+// GetOrCreateHub retrieves an existing Hub by ID or creates and initializes a new one if it doesn't exist.
+// Returns the Hub and a boolean indicating whether it was newly created.
+func (h *HubRegistry) GetOrCreateHub(id string) (*websocket.Hub, bool) {
 	if hub, ok := h.Hubs[id]; ok {
-		return hub
+		return hub, false
 	}
 
 	h.mu.Lock()
@@ -30,7 +32,7 @@ func (h *HubRegistry) GetOrCreateHub(id string) *websocket.Hub {
 	go h.Hubs[id].Run()
 
 	log.Println("Created hub for pet{", id, "}")
-	return h.Hubs[id]
+	return h.Hubs[id], true
 }
 
 func (h *HubRegistry) RemoveHub(id string) {
