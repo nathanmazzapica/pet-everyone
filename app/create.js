@@ -6,7 +6,6 @@ createForm.addEventListener('submit', e => {
 })
 
 async function uploadPet() {
-    alert("uploading")
     const petName = document.getElementById('pet-name-input').value;
     const petImageFile = document.getElementById('pet-image-input').files[0];
 
