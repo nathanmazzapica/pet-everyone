@@ -61,7 +61,7 @@ func cleanup(user_ids ...*uuid.UUID) {
 	}
 
 	for _, id := range user_ids {
-		err := client.deleteUser(id)
+		err := client.DeleteUser(id)
 		if err != nil {
 			panic(err)
 		}

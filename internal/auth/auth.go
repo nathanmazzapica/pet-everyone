@@ -49,5 +49,6 @@ func GenerateSessionToken() string {
 	if err != nil {
 		panic("failed to generate random bytes")
 	}
+
 	return base64.RawURLEncoding.EncodeToString(base)
 }

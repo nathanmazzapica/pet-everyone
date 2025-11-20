@@ -1,6 +1,7 @@
 {{ define "title" }}Pet Everyone{{ end }}
 
 {{ define "content" }}
+    <h1>Login</h1>
     <div id="login-form-container">
         <form id="login-form">
             <label for="email-input">Email</label>
@@ -10,10 +11,5 @@
             <button type="submit" id="login-button">Login</button>
         </form>
     </div>
-    {{ range .Pets }}
-        <div>
-            <a href="/pet/{{ .PetID }}">{{ .Name }}</a>
-        </div>
-    {{ end }}
-    <script src="/app/app.js"></script>
+    <script src="/app/login.js"></script>
 {{ end }}

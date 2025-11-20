@@ -72,7 +72,7 @@ func (c *Client) GetUserPasswordHashByEmail(email string) (string, error) {
 }
 
 func (c *Client) GetUserByID(id *uuid.UUID) (*User, error) {
-	query := `SELECT * FROM RegisteredUser WHERE user_id = $1`
+	query := `SELECT user_id, email, created_at FROM RegisteredUser WHERE user_id = $1`
 	row := c.db.QueryRow(query, id)
 
 	var user User
@@ -84,7 +84,7 @@ func (c *Client) GetUserByID(id *uuid.UUID) (*User, error) {
 }
 
 func (c *Client) GetUserByEmail(email string) (*User, error) {
-	query := `SELECT * FROM RegisteredUser WHERE email = $1`
+	query := `SELECT user_id, email, created_at FROM RegisteredUser WHERE email = $1`
 	row := c.db.QueryRow(query, email)
 
 	var user User
@@ -95,7 +95,7 @@ func (c *Client) GetUserByEmail(email string) (*User, error) {
 	return &user, err
 }
 
-func (c *Client) deleteUser(id *uuid.UUID) error {
+func (c *Client) DeleteUser(id *uuid.UUID) error {
 	query := `DELETE FROM RegisteredUser WHERE user_id = $1`
 	_, err := c.db.Exec(query, id)
 	return err

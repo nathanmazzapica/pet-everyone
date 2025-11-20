@@ -1,0 +1,15 @@
+{{ define "title" }}Pet Everyone{{ end }}
+
+{{ define "content" }}
+    <h1>signup</h1>
+    <div id="signup-form-container">
+        <form id="signup-form">
+            <label for="email-input">Email</label>
+            <input type="email" id="email-input" required/>
+            <label for="password-input">Password</label>
+            <input type="password" minlength="8" max="32" id="password-input" required/>
+            <button type="submit" id="signup-button">Sign up</button>
+        </form>
+    </div>
+    <script src="/app/signup.js"></script>
+{{ end }}

@@ -67,6 +67,13 @@ func main() {
 	mux.Handle("/assets/", assetHandler)
 
 	mux.HandleFunc("/", cfg.serveHome)
+
+	mux.HandleFunc("/login", cfg.serveLogin)
+	mux.HandleFunc("/signup", cfg.serveSignup)
+
+	mux.HandleFunc("/api/login", cfg.handleLogin)
+	mux.HandleFunc("/api/signup", cfg.handleSignup)
+
 	mux.HandleFunc("/pet/{pet_id}", cfg.handlePetConnect)
 	mux.HandleFunc("/pet/{pet_id}/ws", func(w http.ResponseWriter, r *http.Request) {
 		cfg.servePetWebsocket(w, r, hubRegistry)
