@@ -12,6 +12,14 @@ CREATE TABLE RegisteredUser (
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE SessionTokens (
+    token TEXT PRIMARY KEY NOT NULL,
+    expires_at TIMESTAMP NOT NULL DEFAULT NOW() + INTERVAL '5 hour',
+    user_id UUID NOT NULL,
+
+    FOREIGN KEY (user_id) REFERENCES RegisteredUser(user_id)
+);
+
 CREATE TABLE PetImage (
     image_id SERIAL PRIMARY KEY NOT NULL,
     image_url TEXT NOT NULL DEFAULT '/assets/placeholder.jpg',
