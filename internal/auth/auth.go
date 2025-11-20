@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"fmt"
 
@@ -10,14 +12,14 @@ import (
 const MinPasswordLength = 8
 
 var (
-	EmptyPasswordError    = errors.New("password cannot be empty")
+	ErrPasswordEmpty      = errors.New("password cannot be empty")
 	TooShortPasswordError = errors.New(fmt.Sprintf("password must be at least %d characters long", MinPasswordLength))
 )
 
 func HashPassword(password string) (string, error) {
 
 	if len(password) == 0 {
-		return "", EmptyPasswordError
+		return "", ErrPasswordEmpty
 	}
 
 	if len(password) < MinPasswordLength {
@@ -39,4 +41,13 @@ func CheckPasswordHash(password, hash string) (bool, error) {
 		return false, err
 	}
 	return match, nil
+}
+
+func GenerateSessionToken() string {
+	base := make([]byte, 64)
+	_, err := rand.Read(base)
+	if err != nil {
+		panic("failed to generate random bytes")
+	}
+	return base64.RawURLEncoding.EncodeToString(base)
 }

@@ -14,7 +14,7 @@ func TestAuth_PasswordHash(t *testing.T) {
 	}{
 		{name: "valid password test", password: "test1234567890", expectedError: nil},
 		{name: "too short password test", password: "test123", expectedError: TooShortPasswordError},
-		{name: "empty password test", password: "", expectedError: EmptyPasswordError},
+		{name: "empty password test", password: "", expectedError: ErrPasswordEmpty},
 	}
 
 	for _, tt := range tests {
