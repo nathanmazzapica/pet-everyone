@@ -61,5 +61,4 @@ func (c *apiConfig) servePetWebsocket(w http.ResponseWriter, r *http.Request, re
 	hub, _ := reg.GetOrCreateHub(petID)
 	log.Println(hub)
 	websocket.ServeWs(hub, w, r)
-
 }
