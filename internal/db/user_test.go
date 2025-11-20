@@ -9,8 +9,8 @@ import (
 
 func TestUser_CreateTestUser(t *testing.T) {
 	client := getTestDB()
-	userId, err := client.CreateUser("email@email.com", "test1234567890")
-	defer cleanup(userId)
+	user, err := client.CreateUser("email@email.com", "test1234567890")
+	defer cleanup(&user.ID)
 
 	if err != nil {
 		t.Fatalf("Error creating test user: %s", err)

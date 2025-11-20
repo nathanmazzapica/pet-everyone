@@ -24,7 +24,7 @@ type User struct {
 	CreatedAt time.Time `sql:"created_at"`
 }
 
-func (c *Client) CreateUser(email, password string) (*uuid.UUID, error) {
+func (c *Client) CreateUser(email, password string) (*User, error) {
 
 	if len(email) == 0 {
 		return nil, ErrEmptyEmail
@@ -61,12 +61,31 @@ func (c *Client) CreateUser(email, password string) (*uuid.UUID, error) {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	return &user.ID, nil
+	return user, nil
+}
+
+func (c *Client) GetUserPasswordHashByEmail(email string) (string, error) {
+	query := `SELECT password_hash FROM RegisteredUser WHERE email = $1`
+	var hash string
+	err := c.db.QueryRow(query, email).Scan(&hash)
+	return hash, err
 }
 
 func (c *Client) GetUserByID(id *uuid.UUID) (*User, error) {
 	query := `SELECT * FROM RegisteredUser WHERE user_id = $1`
 	row := c.db.QueryRow(query, id)
+
+	var user User
+	err := row.Scan(&user.ID, &user.Email, &user.CreatedAt)
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrUserNotFound
+	}
+	return &user, err
+}
+
+func (c *Client) GetUserByEmail(email string) (*User, error) {
+	query := `SELECT * FROM RegisteredUser WHERE email = $1`
+	row := c.db.QueryRow(query, email)
 
 	var user User
 	err := row.Scan(&user.ID, &user.Email, &user.CreatedAt)
