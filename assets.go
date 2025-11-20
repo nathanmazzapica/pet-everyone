@@ -10,9 +10,9 @@ import (
 	"strings"
 )
 
-func (cfg apiConfig) ensureAssetsDir() error {
-	if _, err := os.Stat(cfg.assetsRoot); os.IsNotExist(err) {
-		return os.Mkdir(cfg.assetsRoot, 0750)
+func (c apiConfig) ensureAssetsDir() error {
+	if _, err := os.Stat(c.assetsRoot); os.IsNotExist(err) {
+		return os.Mkdir(c.assetsRoot, 0750)
 	}
 	return nil
 }
@@ -28,8 +28,8 @@ func getAssetPath(mediaType string) string {
 	return fmt.Sprintf("%s%s", id, ext)
 }
 
-func (cfg apiConfig) getAssetDiskPath(assetPath string) (string, error) {
-	rootAbs, err := filepath.Abs(cfg.assetsRoot)
+func (c apiConfig) getAssetDiskPath(assetPath string) (string, error) {
+	rootAbs, err := filepath.Abs(c.assetsRoot)
 	if err != nil {
 		return "", err
 	}
@@ -44,8 +44,8 @@ func (cfg apiConfig) getAssetDiskPath(assetPath string) (string, error) {
 	return "", errors.New("asset path is outside of assets root")
 }
 
-func (cfg apiConfig) getAssetURL(assetPath string) string {
-	return fmt.Sprintf("http://localhost:%s/assets/%s", cfg.port, assetPath)
+func (c apiConfig) getAssetURL(assetPath string) string {
+	return fmt.Sprintf("http://localhost:%s/assets/%s", c.port, assetPath)
 }
 
 func mediaTypeToExtension(mediaType string) string {

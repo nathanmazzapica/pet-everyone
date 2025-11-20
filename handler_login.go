@@ -8,14 +8,14 @@ import (
 	"time"
 )
 
-func (cfg *apiConfig) serveLogin(w http.ResponseWriter, r *http.Request) {
+func (c *apiConfig) serveLogin(w http.ResponseWriter, r *http.Request) {
 	err := render(w, "login", nil)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to render login page", err)
 	}
 }
 
-func (cfg *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
+func (c *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Password string `json:"password"`
 		Email    string `json:"email"`
@@ -34,7 +34,7 @@ func (cfg *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash, err := cfg.db.GetUserPasswordHashByEmail(params.Email)
+	hash, err := c.db.GetUserPasswordHashByEmail(params.Email)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to get user password hash", err)
 		return
@@ -51,14 +51,14 @@ func (cfg *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := cfg.db.GetUserByEmail(params.Email)
+	user, err := c.db.GetUserByEmail(params.Email)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to get user", err)
 		return
 	}
 
 	token := auth.GenerateSessionToken()
-	err = cfg.db.SaveSessionToken(token, user.ID.String(), time.Now().UTC().Add(time.Hour*24*30))
+	err = c.db.SaveSessionToken(token, user.ID.String(), time.Now().UTC().Add(time.Hour*24*30))
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to save session token", err)
 		return

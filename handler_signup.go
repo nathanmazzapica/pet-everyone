@@ -6,14 +6,14 @@ import (
 	"net/http"
 )
 
-func (cfg *apiConfig) serveSignup(w http.ResponseWriter, r *http.Request) {
+func (c *apiConfig) serveSignup(w http.ResponseWriter, r *http.Request) {
 	err := render(w, "signup", nil)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to render signup page", err)
 	}
 }
 
-func (cfg *apiConfig) handleSignup(w http.ResponseWriter, r *http.Request) {
+func (c *apiConfig) handleSignup(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -27,7 +27,7 @@ func (cfg *apiConfig) handleSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := cfg.db.CreateUser(params.Email, params.Password)
+	user, err := c.db.CreateUser(params.Email, params.Password)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to create user", err)
 		return

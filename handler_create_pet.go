@@ -9,7 +9,7 @@ import (
 	"pet-everyone/internal/db"
 )
 
-func (cfg *apiConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
+func (c *apiConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		respondWithError(w, http.StatusMethodNotAllowed, "forbidden method", nil)
 		return
@@ -51,7 +51,7 @@ func (cfg *apiConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	assetPath := getAssetPath(mediaType)
-	assetDiskPath, err := cfg.getAssetDiskPath(assetPath)
+	assetDiskPath, err := c.getAssetDiskPath(assetPath)
 
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to get asset disk path", err)
@@ -71,10 +71,10 @@ func (cfg *apiConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url := cfg.getAssetURL(assetPath)
+	url := c.getAssetURL(assetPath)
 
 	log.Println(url)
-	imageID, err := cfg.db.CreatePetImage(url)
+	imageID, err := c.db.CreatePetImage(url)
 	log.Println(imageID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to create pet image", err)
@@ -88,7 +88,7 @@ func (cfg *apiConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
 		Visibility:  true,
 	}
 
-	err = cfg.db.CreatePet(pet)
+	err = c.db.CreatePet(pet)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to create pet", err)
 		return
