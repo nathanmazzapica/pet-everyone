@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func (c apiConfig) ensureAssetsDir() error {
+func (c *apiConfig) ensureAssetsDir() error {
 	if _, err := os.Stat(c.assetsRoot); os.IsNotExist(err) {
 		return os.Mkdir(c.assetsRoot, 0750)
 	}
@@ -28,7 +28,7 @@ func getAssetPath(mediaType string) string {
 	return fmt.Sprintf("%s%s", id, ext)
 }
 
-func (c apiConfig) getAssetDiskPath(assetPath string) (string, error) {
+func (c *apiConfig) getAssetDiskPath(assetPath string) (string, error) {
 	rootAbs, err := filepath.Abs(c.assetsRoot)
 	if err != nil {
 		return "", err
@@ -44,7 +44,7 @@ func (c apiConfig) getAssetDiskPath(assetPath string) (string, error) {
 	return "", errors.New("asset path is outside of assets root")
 }
 
-func (c apiConfig) getAssetURL(assetPath string) string {
+func (c *apiConfig) getAssetURL(assetPath string) string {
 	return fmt.Sprintf("http://localhost:%s/assets/%s", c.port, assetPath)
 }
 
