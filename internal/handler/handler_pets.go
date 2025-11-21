@@ -10,7 +10,7 @@ import (
 )
 
 func (c *APIConfig) serveHome(w http.ResponseWriter, _ *http.Request) {
-	pets, err := c.db.GetAllPets()
+	pets, err := c.GetDB().GetAllPets()
 	if err != nil {
 		utils.RespondWithError(w, 500, "unable to load pets", err)
 		return
@@ -31,13 +31,13 @@ func (c *APIConfig) handlePetConnect(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling connection for pet{", petID, "}")
 
 	// Get pet metadata from db
-	pet, err := c.db.GetPetByID(petID)
+	pet, err := c.GetDB().GetPetByID(petID)
 	if err != nil {
 		utils.RespondWithError(w, 500, "unable to load pet", err)
 		return
 	}
 
-	image := c.db.GetPetImage(*pet.ActiveImage)
+	image := c.GetDB().GetPetImage(*pet.ActiveImage)
 
 	data := struct {
 		PetName  string

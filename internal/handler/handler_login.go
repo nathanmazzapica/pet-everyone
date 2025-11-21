@@ -35,7 +35,9 @@ func (c *APIConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash, err := c.db.GetUserPasswordHashByEmail(params.Email)
+	db := c.GetDB()
+
+	hash, err := db.GetUserPasswordHashByEmail(params.Email)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, "Unable to get user password hash", err)
 		return
@@ -52,14 +54,14 @@ func (c *APIConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := c.db.GetUserByEmail(params.Email)
+	user, err := db.GetUserByEmail(params.Email)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, "Unable to get user", err)
 		return
 	}
 
 	token := auth.GenerateSessionToken()
-	err = c.db.SaveSessionToken(token, user.ID.String(), time.Now().UTC().Add(time.Hour*24*30))
+	err = db.SaveSessionToken(token, user.ID.String(), time.Now().UTC().Add(time.Hour*24*30))
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, "Unable to save session token", err)
 		return

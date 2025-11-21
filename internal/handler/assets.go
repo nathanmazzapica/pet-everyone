@@ -11,8 +11,9 @@ import (
 )
 
 func (c *APIConfig) EnsureAssetsDir() error {
-	if _, err := os.Stat(c.assetsRoot); os.IsNotExist(err) {
-		return os.Mkdir(c.assetsRoot, 0750)
+	root := c.GetAssetsRoot()
+	if _, err := os.Stat(root); os.IsNotExist(err) {
+		return os.Mkdir(root, 0750)
 	}
 	return nil
 }
@@ -29,7 +30,7 @@ func getAssetPath(mediaType string) string {
 }
 
 func (c *APIConfig) getAssetDiskPath(assetPath string) (string, error) {
-	rootAbs, err := filepath.Abs(c.assetsRoot)
+	rootAbs, err := filepath.Abs(c.GetAssetsRoot())
 	if err != nil {
 		return "", err
 	}
@@ -45,7 +46,7 @@ func (c *APIConfig) getAssetDiskPath(assetPath string) (string, error) {
 }
 
 func (c *APIConfig) getAssetURL(assetPath string) string {
-	return fmt.Sprintf("http://localhost:%s/assets/%s", c.port, assetPath)
+	return fmt.Sprintf("http://localhost:%s/assets/%s", c.GetPort(), assetPath)
 }
 
 func mediaTypeToExtension(mediaType string) string {

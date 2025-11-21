@@ -28,7 +28,9 @@ func (c *APIConfig) handleSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := c.db.CreateUser(params.Email, params.Password)
+	db := c.GetDB()
+
+	user, err := db.CreateUser(params.Email, params.Password)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, "Unable to create user", err)
 		return

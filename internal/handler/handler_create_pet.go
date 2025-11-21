@@ -75,7 +75,7 @@ func (c *APIConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
 	url := c.getAssetURL(assetPath)
 
 	log.Println(url)
-	imageID, err := c.db.CreatePetImage(url)
+	imageID, err := c.GetDB().CreatePetImage(url)
 	log.Println(imageID)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, "Unable to create pet image", err)
@@ -89,7 +89,7 @@ func (c *APIConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
 		Visibility:  true,
 	}
 
-	err = c.db.CreatePet(pet)
+	err = c.GetDB().CreatePet(pet)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, "Unable to create pet", err)
 		return
