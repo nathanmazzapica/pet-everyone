@@ -20,7 +20,7 @@ func (cfg *APIConfig) GetSessionToken(token string) (*db.SessionToken, error) {
 }
 
 func SetupAPI(dbClient db.Client, filepathRoot string, assetsRoot string, port string) *APIConfig {
-	cfg := &APIConfig{config.NewConfig(dbClient, filepathRoot, assetsRoot, port)}
+	cfg := &APIConfig{cfg: config.NewConfig(dbClient, filepathRoot, assetsRoot, port)}
 	return cfg
 }
 
