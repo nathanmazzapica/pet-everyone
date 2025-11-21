@@ -31,6 +31,8 @@ async function login() {
 
 		if (data.token) {
 			localStorage.setItem("token", data.token);
+			alert("You have been logged in!");
+			window.location.href = "/";
 		} else {
 			console.error("Token not found in response");
 		}
