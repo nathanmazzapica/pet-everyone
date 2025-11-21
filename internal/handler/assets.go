@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"crypto/rand"
@@ -10,9 +10,10 @@ import (
 	"strings"
 )
 
-func (c *apiConfig) ensureAssetsDir() error {
-	if _, err := os.Stat(c.assetsRoot); os.IsNotExist(err) {
-		return os.Mkdir(c.assetsRoot, 0750)
+func (c *APIConfig) EnsureAssetsDir() error {
+	root := c.GetAssetsRoot()
+	if _, err := os.Stat(root); os.IsNotExist(err) {
+		return os.Mkdir(root, 0750)
 	}
 	return nil
 }
@@ -28,8 +29,8 @@ func getAssetPath(mediaType string) string {
 	return fmt.Sprintf("%s%s", id, ext)
 }
 
-func (c *apiConfig) getAssetDiskPath(assetPath string) (string, error) {
-	rootAbs, err := filepath.Abs(c.assetsRoot)
+func (c *APIConfig) getAssetDiskPath(assetPath string) (string, error) {
+	rootAbs, err := filepath.Abs(c.GetAssetsRoot())
 	if err != nil {
 		return "", err
 	}
@@ -44,8 +45,8 @@ func (c *apiConfig) getAssetDiskPath(assetPath string) (string, error) {
 	return "", errors.New("asset path is outside of assets root")
 }
 
-func (c *apiConfig) getAssetURL(assetPath string) string {
-	return fmt.Sprintf("http://localhost:%s/assets/%s", c.port, assetPath)
+func (c *APIConfig) getAssetURL(assetPath string) string {
+	return fmt.Sprintf("http://localhost:%s/assets/%s", c.GetPort(), assetPath)
 }
 
 func mediaTypeToExtension(mediaType string) string {

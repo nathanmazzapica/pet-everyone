@@ -16,6 +16,10 @@ type SessionToken struct {
 	Expiry time.Time `sql:"expires_at"`
 }
 
+func (t *SessionToken) IsExpired() bool {
+	return time.Now().After(t.Expiry)
+}
+
 func (c *Client) SaveSessionToken(token string, userID string, expiry time.Time) error {
 	query := `INSERT INTO SessionTokens (token, user_id, expires_at) VALUES ($1, $2, $3)`
 	_, err := c.db.Exec(query, token, userID, expiry)

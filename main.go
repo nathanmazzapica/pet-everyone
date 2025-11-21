@@ -1,22 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"pet-everyone/internal/db"
+	"pet-everyone/internal/handler"
 	"pet-everyone/internal/registry"
 	"time"
 
 	"github.com/joho/godotenv"
 )
-
-type apiConfig struct {
-	db         db.Client
-	assetsRoot string
-	port       string
-}
 
 func main() {
 	err := godotenv.Load(".env")
@@ -43,46 +37,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error connecting to db: %v", err)
 	}
+	log.Println("Connected to db")
 
-	cfg := apiConfig{
-		db:         client,
-		assetsRoot: assetsRoot,
-		port:       port,
-	}
+	cfg := handler.SetupAPI(client, filepathRoot, assetsRoot, port)
 
-	err = cfg.ensureAssetsDir()
+	err = cfg.EnsureAssetsDir()
 	if err != nil {
 		log.Fatalf("Couldn't create assets directory: %v", err)
 	}
 
-	fmt.Println("Connected to db")
-
 	hubRegistry := registry.NewHubRegistry()
 
-	mux := http.NewServeMux()
-	appHandler := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
-	mux.Handle("/app/", appHandler)
-
-	assetHandler := http.StripPrefix("/assets", http.FileServer(http.Dir(assetsRoot)))
-	mux.Handle("/assets/", assetHandler)
-
-	mux.HandleFunc("/", cfg.serveHome)
-
-	mux.HandleFunc("/login", cfg.serveLogin)
-	mux.HandleFunc("/signup", cfg.serveSignup)
-
-	mux.HandleFunc("/api/login", cfg.handleLogin)
-	mux.HandleFunc("/api/signup", cfg.handleSignup)
-
-	mux.HandleFunc("/pet/{pet_id}", cfg.handlePetConnect)
-	mux.HandleFunc("/pet/{pet_id}/ws", func(w http.ResponseWriter, r *http.Request) {
-		cfg.servePetWebsocket(w, r, hubRegistry)
-	})
-
-	mux.HandleFunc("/pet/create", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, filepathRoot+"/pet/create.html")
-	})
-	mux.HandleFunc("/pet/create/submit", cfg.handleCreatePet)
+	mux := handler.SetupMux(cfg, hubRegistry)
 
 	srv := &http.Server{
 		Addr:              ":" + port,

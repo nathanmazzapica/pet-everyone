@@ -13,7 +13,7 @@ func TestAuth_PasswordHash(t *testing.T) {
 		expectedError error
 	}{
 		{name: "valid password test", password: "test1234567890", expectedError: nil},
-		{name: "too short password test", password: "test123", expectedError: TooShortPasswordError},
+		{name: "too short password test", password: "test123", expectedError: ErrTooShortPassword},
 		{name: "empty password test", password: "", expectedError: ErrPasswordEmpty},
 	}
 

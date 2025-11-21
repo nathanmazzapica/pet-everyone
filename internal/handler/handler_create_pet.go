@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"io"
@@ -7,11 +7,12 @@ import (
 	"net/http"
 	"os"
 	"pet-everyone/internal/db"
+	"pet-everyone/internal/utils"
 )
 
-func (c *apiConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
+func (c *APIConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		respondWithError(w, http.StatusMethodNotAllowed, "forbidden method", nil)
+		utils.RespondWithError(w, http.StatusMethodNotAllowed, "forbidden method", nil)
 		return
 	}
 
@@ -19,7 +20,7 @@ func (c *apiConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseMultipartForm(maxMemory)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "unable to parse multipart form", err)
+		utils.RespondWithError(w, http.StatusInternalServerError, "unable to parse multipart form", err)
 		return
 	}
 
@@ -27,7 +28,7 @@ func (c *apiConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
 	petName := r.FormValue("petName")
 
 	if petName == "" {
-		respondWithError(w, http.StatusBadRequest, "must provide petName", nil)
+		utils.RespondWithError(w, http.StatusBadRequest, "must provide petName", nil)
 		return
 	}
 
@@ -36,17 +37,17 @@ func (c *apiConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
 	// image
 	file, header, err := r.FormFile("petImageFile")
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "could not read pet image", nil)
+		utils.RespondWithError(w, http.StatusInternalServerError, "could not read pet image", nil)
 	}
 	defer file.Close()
 
 	mediaType, _, err := mime.ParseMediaType(header.Header.Get("Content-Type"))
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "could not read pet image media type", nil)
+		utils.RespondWithError(w, http.StatusInternalServerError, "could not read pet image media type", nil)
 	}
 
 	if mediaType != "image/jpeg" && mediaType != "image/png" {
-		respondWithError(w, http.StatusBadRequest, "Invalid file type", nil)
+		utils.RespondWithError(w, http.StatusBadRequest, "Invalid file type", nil)
 		return
 	}
 
@@ -54,30 +55,30 @@ func (c *apiConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
 	assetDiskPath, err := c.getAssetDiskPath(assetPath)
 
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Unable to get asset disk path", err)
+		utils.RespondWithError(w, http.StatusInternalServerError, "Unable to get asset disk path", err)
 		return
 	}
 
 	// #nosec G304 -- assetDiskPath is server-generated and sanitized in getAssetDiskPath
 	dst, err := os.Create(assetDiskPath)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Unable to create file", err)
+		utils.RespondWithError(w, http.StatusInternalServerError, "Unable to create file", err)
 		return
 	}
 	defer dst.Close()
 
 	if _, err := io.Copy(dst, file); err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Unable to save file", err)
+		utils.RespondWithError(w, http.StatusInternalServerError, "Unable to save file", err)
 		return
 	}
 
 	url := c.getAssetURL(assetPath)
 
 	log.Println(url)
-	imageID, err := c.db.CreatePetImage(url)
+	imageID, err := c.GetDB().CreatePetImage(url)
 	log.Println(imageID)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Unable to create pet image", err)
+		utils.RespondWithError(w, http.StatusInternalServerError, "Unable to create pet image", err)
 		return
 	}
 
@@ -88,11 +89,11 @@ func (c *apiConfig) handleCreatePet(w http.ResponseWriter, r *http.Request) {
 		Visibility:  true,
 	}
 
-	err = c.db.CreatePet(pet)
+	err = c.GetDB().CreatePet(pet)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Unable to create pet", err)
+		utils.RespondWithError(w, http.StatusInternalServerError, "Unable to create pet", err)
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, pet)
+	utils.RespondWithJSON(w, http.StatusCreated, pet)
 }

@@ -1,17 +1,18 @@
-package main
+package handler
 
 import (
 	"log"
 	"net/http"
 	"pet-everyone/internal/db"
 	"pet-everyone/internal/registry"
+	"pet-everyone/internal/utils"
 	"pet-everyone/internal/websocket"
 )
 
-func (c *apiConfig) serveHome(w http.ResponseWriter, _ *http.Request) {
-	pets, err := c.db.GetAllPets()
+func (c *APIConfig) serveHome(w http.ResponseWriter, _ *http.Request) {
+	pets, err := c.GetDB().GetAllPets()
 	if err != nil {
-		respondWithError(w, 500, "unable to load pets", err)
+		utils.RespondWithError(w, 500, "unable to load pets", err)
 		return
 	}
 	data := struct {
@@ -21,22 +22,22 @@ func (c *apiConfig) serveHome(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	if err := render(w, "home", data); err != nil {
-		respondWithError(w, 500, "failed to populate template", err)
+		utils.RespondWithError(w, 500, "failed to populate template", err)
 	}
 }
 
-func (c *apiConfig) handlePetConnect(w http.ResponseWriter, r *http.Request) {
+func (c *APIConfig) handlePetConnect(w http.ResponseWriter, r *http.Request) {
 	petID := r.PathValue("pet_id")
 	log.Println("Handling connection for pet{", petID, "}")
 
 	// Get pet metadata from db
-	pet, err := c.db.GetPetByID(petID)
+	pet, err := c.GetDB().GetPetByID(petID)
 	if err != nil {
-		respondWithError(w, 500, "unable to load pet", err)
+		utils.RespondWithError(w, 500, "unable to load pet", err)
 		return
 	}
 
-	image := c.db.GetPetImage(*pet.ActiveImage)
+	image := c.GetDB().GetPetImage(*pet.ActiveImage)
 
 	data := struct {
 		PetName  string
@@ -49,12 +50,12 @@ func (c *apiConfig) handlePetConnect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := render(w, "pet", data); err != nil {
-		respondWithError(w, 500, "failed to populate template", err)
+		utils.RespondWithError(w, 500, "failed to populate template", err)
 	}
 }
 
 // servePetWebsocket directs the user to the appropriate websocket hub for their chosen pet
-func (c *apiConfig) servePetWebsocket(w http.ResponseWriter, r *http.Request, reg *registry.HubRegistry) {
+func (c *APIConfig) servePetWebsocket(w http.ResponseWriter, r *http.Request, reg *registry.HubRegistry) {
 	petID := r.PathValue("pet_id")
 	log.Println("Connecting to pet{", petID, "}")
 

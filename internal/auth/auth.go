@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
 
 	"github.com/alexedwards/argon2id"
 )
@@ -12,8 +14,8 @@ import (
 const MinPasswordLength = 8
 
 var (
-	ErrPasswordEmpty      = errors.New("password cannot be empty")
-	TooShortPasswordError = errors.New(fmt.Sprintf("password must be at least %d characters long", MinPasswordLength))
+	ErrPasswordEmpty    = errors.New("password cannot be empty")
+	ErrTooShortPassword = fmt.Errorf("password must be at least %d characters long", MinPasswordLength)
 )
 
 func HashPassword(password string) (string, error) {
@@ -23,7 +25,7 @@ func HashPassword(password string) (string, error) {
 	}
 
 	if len(password) < MinPasswordLength {
-		return "", TooShortPasswordError
+		return "", ErrTooShortPassword
 	}
 
 	hash, err := argon2id.CreateHash(password, argon2id.DefaultParams)
@@ -51,4 +53,25 @@ func GenerateSessionToken() string {
 	}
 
 	return base64.RawURLEncoding.EncodeToString(base)
+}
+
+var (
+	ErrEmptyAuthHeader   = errors.New("authorization header cannot be empty")
+	ErrInvalidAuthHeader = errors.New("invalid authorization header")
+)
+
+func GetTokenFromHeader(headers http.Header) (string, error) {
+	header := headers.Get("Authorization")
+
+	if header == "" {
+		return "", ErrEmptyAuthHeader
+	}
+
+	parts := strings.Split(header, " ")
+
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return "", ErrInvalidAuthHeader
+	}
+
+	return parts[1], nil
 }

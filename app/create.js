@@ -1,3 +1,10 @@
+document.addEventListener("DOMContentLoaded", (event) => {
+	if (!localStorage.getItem("token")) {
+		alert("You must be logged in to create a pet");
+		window.location.href = "/login";
+	}
+});
+
 const createForm = document.getElementById('new-pet-form')
 
 createForm.addEventListener('submit', e => {
@@ -20,6 +27,9 @@ async function uploadPet() {
     try {
         const res = await fetch(`/pet/create/submit`, {
             method: 'POST',
+			headers: {
+				Authorization: `Bearer ${localStorage.getItem('token')}`,
+			},
             body: formData,
         });
         if (!res.ok) {
