@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
 
 	"github.com/alexedwards/argon2id"
 )
@@ -51,4 +53,25 @@ func GenerateSessionToken() string {
 	}
 
 	return base64.RawURLEncoding.EncodeToString(base)
+}
+
+var (
+	ErrEmptyAuthHeader   = errors.New("authorization header cannot be empty")
+	ErrInvalidAuthHeader = errors.New("invalid authorization header")
+)
+
+func GetTokenFromHeader(headers http.Header) (string, error) {
+	header := headers.Get("Authorization")
+
+	if header == "" {
+		return "", ErrEmptyAuthHeader
+	}
+
+	parts := strings.Split(header, " ")
+
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return "", ErrInvalidAuthHeader
+	}
+
+	return parts[1], nil
 }

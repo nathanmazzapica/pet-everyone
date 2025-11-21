@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -38,6 +37,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error connecting to db: %v", err)
 	}
+	log.Println("Connected to db")
 
 	cfg := handler.SetupAPI(client, filepathRoot, assetsRoot, port)
 
@@ -45,8 +45,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Couldn't create assets directory: %v", err)
 	}
-
-	fmt.Println("Connected to db")
 
 	hubRegistry := registry.NewHubRegistry()
 
