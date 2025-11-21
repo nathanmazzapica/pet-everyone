@@ -18,10 +18,6 @@ func Auth(cfg config.AppConfig) func(http.Handler) http.Handler {
 			}
 			log.Println("token:", token)
 
-			if token == "" {
-				utils.RespondWithError(w, http.StatusUnauthorized, "You need to be logged in to do that!", nil)
-			}
-
 			db := cfg.GetDB()
 
 			dbToken, err := db.GetSessionToken(token)
