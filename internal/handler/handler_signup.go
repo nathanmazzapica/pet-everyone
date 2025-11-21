@@ -11,6 +11,7 @@ func (c *APIConfig) serveSignup(w http.ResponseWriter, r *http.Request) {
 	err := render(w, "signup", nil)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, "Unable to render signup page", err)
+		return
 	}
 }
 

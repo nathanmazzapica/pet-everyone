@@ -13,6 +13,7 @@ func (c *APIConfig) serveLogin(w http.ResponseWriter, r *http.Request) {
 	err := render(w, "login", nil)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, "Unable to render login page", err)
+		return
 	}
 }
 
