@@ -14,8 +14,8 @@ import (
 const MinPasswordLength = 8
 
 var (
-	ErrPasswordEmpty      = errors.New("password cannot be empty")
-	TooShortPasswordError = errors.New(fmt.Sprintf("password must be at least %d characters long", MinPasswordLength))
+	ErrPasswordEmpty    = errors.New("password cannot be empty")
+	ErrTooShortPassword = fmt.Errorf("password must be at least %d characters long", MinPasswordLength)
 )
 
 func HashPassword(password string) (string, error) {
@@ -25,7 +25,7 @@ func HashPassword(password string) (string, error) {
 	}
 
 	if len(password) < MinPasswordLength {
-		return "", TooShortPasswordError
+		return "", ErrTooShortPassword
 	}
 
 	hash, err := argon2id.CreateHash(password, argon2id.DefaultParams)

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"pet-everyone/internal/db"
 	"testing"
 )
 
@@ -24,7 +25,7 @@ func TestMediaTypeToExtension(t *testing.T) {
 }
 
 func TestGetAssetDiskPath(t *testing.T) {
-	cfg := APIConfig{assetsRoot: "/tmp/assets"}
+	cfg := SetupAPI(db.Client{}, "/tmp", "/tmp/assets", "")
 
 	tests := []struct {
 		inputPath string
