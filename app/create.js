@@ -27,7 +27,9 @@ async function uploadPet() {
     try {
         const res = await fetch(`/pet/create/submit`, {
             method: 'POST',
-			Authorization: `Bearer ${localStorage.getItem('token')}`,
+			headers: {
+				Authorization: `Bearer ${localStorage.getItem('token')}`,
+			},
             body: formData,
         });
         if (!res.ok) {
