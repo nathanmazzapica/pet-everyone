@@ -1,6 +1,8 @@
-package main
+package handler
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestMediaTypeToExtension(t *testing.T) {
 	tests := []struct {
@@ -22,7 +24,7 @@ func TestMediaTypeToExtension(t *testing.T) {
 }
 
 func TestGetAssetDiskPath(t *testing.T) {
-	cfg := apiConfig{assetsRoot: "/tmp/assets"}
+	cfg := APIConfig{assetsRoot: "/tmp/assets"}
 
 	tests := []struct {
 		inputPath string
