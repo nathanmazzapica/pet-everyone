@@ -20,10 +20,10 @@ type Config struct {
 
 func NewConfig(dbClient db.Client, filepathRoot string, assetsRoot string, port string) *Config {
 	return &Config{
-		dbClient,
-		filepathRoot,
-		assetsRoot,
-		port,
+		db:           dbClient,
+		filepathRoot: filepathRoot,
+		assetsRoot:   assetsRoot,
+		port:         port,
 	}
 }
 
