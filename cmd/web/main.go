@@ -4,8 +4,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"pet-everyone/cmd/web/application"
+	"pet-everyone/cmd/web/handler"
 	"pet-everyone/internal/db"
-	"pet-everyone/internal/handler"
 	"pet-everyone/internal/registry"
 	"time"
 
@@ -39,20 +40,22 @@ func main() {
 	}
 	log.Println("Connected to db")
 
-	cfg := handler.SetupAPI(client, filepathRoot, assetsRoot, port)
+	app := application.NewConfig(
+		client,
+		registry.NewHubRegistry(),
+		filepathRoot,
+		assetsRoot,
+		port,
+	)
 
-	err = cfg.EnsureAssetsDir()
+	err = app.EnsureAssetsDir()
 	if err != nil {
 		log.Fatalf("Couldn't create assets directory: %v", err)
 	}
 
-	hubRegistry := registry.NewHubRegistry()
-
-	mux := handler.SetupMux(cfg, hubRegistry)
-
 	srv := &http.Server{
 		Addr:              ":" + port,
-		Handler:           mux,
+		Handler:           handler.Routes(app),
 		ReadHeaderTimeout: 3 * time.Second,
 		ReadTimeout:       10 * time.Second,
 	}

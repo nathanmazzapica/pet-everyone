@@ -44,15 +44,15 @@ func (c Config) DSN() string {
 	)
 }
 
-func Connect(cfg Config) (Client, error) {
+func Connect(cfg Config) (*Client, error) {
 	db, err := sql.Open("pgx", cfg.DSN())
 	if err != nil {
-		return Client{}, err
+		return nil, err
 	}
 
 	if err := db.Ping(); err != nil {
-		return Client{}, err
+		return nil, err
 	}
 
-	return Client{db}, nil
+	return &Client{db}, nil
 }

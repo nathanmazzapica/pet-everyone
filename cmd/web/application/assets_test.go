@@ -1,7 +1,6 @@
-package handler
+package application
 
 import (
-	"pet-everyone/internal/db"
 	"testing"
 )
 
@@ -25,7 +24,7 @@ func TestMediaTypeToExtension(t *testing.T) {
 }
 
 func TestGetAssetDiskPath(t *testing.T) {
-	cfg := SetupAPI(db.Client{}, "/tmp", "/tmp/assets", "")
+	cfg := &Config{nil, nil, "/tmp", "/tmp/assets", ""}
 
 	tests := []struct {
 		inputPath string
@@ -37,7 +36,7 @@ func TestGetAssetDiskPath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.inputPath, func(t *testing.T) {
-			_, err := cfg.getAssetDiskPath(tt.inputPath)
+			_, err := cfg.GetAssetDiskPath(tt.inputPath)
 			if (err != nil) != tt.shouldErr {
 				t.Errorf("Expected error: %v, got: %v", tt.shouldErr, err)
 			}
