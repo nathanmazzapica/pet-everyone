@@ -27,6 +27,7 @@ func NewConfig(dbClient *db.Client, registry *registry.HubRegistry, filepathRoot
 	}
 }
 
+func (app *Config) Logger() *slog.Logger               { return app.logger }
 func (app *Config) GetDB() *db.Client                  { return app.db }
 func (app *Config) GetRegistry() *registry.HubRegistry { return app.registry }
 func (app *Config) GetPort() string                    { return app.port }

@@ -13,7 +13,7 @@ import (
 func handleCreatePet(app *application.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			application.RespondWithError(w, http.StatusMethodNotAllowed, "forbidden method", nil)
+			app.RespondWithError(w, http.StatusMethodNotAllowed, "forbidden method", nil)
 			return
 		}
 
@@ -21,7 +21,7 @@ func handleCreatePet(app *application.Config) http.Handler {
 
 		err := r.ParseMultipartForm(maxMemory)
 		if err != nil {
-			application.RespondWithError(w, http.StatusInternalServerError, "unable to parse multipart form", err)
+			app.RespondWithError(w, http.StatusInternalServerError, "unable to parse multipart form", err)
 			return
 		}
 
@@ -29,7 +29,7 @@ func handleCreatePet(app *application.Config) http.Handler {
 		petName := r.FormValue("petName")
 
 		if petName == "" {
-			application.RespondWithError(w, http.StatusBadRequest, "must provide petName", nil)
+			app.RespondWithError(w, http.StatusBadRequest, "must provide petName", nil)
 			return
 		}
 
@@ -38,17 +38,17 @@ func handleCreatePet(app *application.Config) http.Handler {
 		// image
 		file, header, err := r.FormFile("petImageFile")
 		if err != nil {
-			application.RespondWithError(w, http.StatusInternalServerError, "could not read pet image", nil)
+			app.RespondWithError(w, http.StatusInternalServerError, "could not read pet image", nil)
 		}
 		defer file.Close()
 
 		mediaType, _, err := mime.ParseMediaType(header.Header.Get("Content-Type"))
 		if err != nil {
-			application.RespondWithError(w, http.StatusInternalServerError, "could not read pet image media type", nil)
+			app.RespondWithError(w, http.StatusInternalServerError, "could not read pet image media type", nil)
 		}
 
 		if mediaType != "image/jpeg" && mediaType != "image/png" {
-			application.RespondWithError(w, http.StatusBadRequest, "Invalid file type", nil)
+			app.RespondWithError(w, http.StatusBadRequest, "Invalid file type", nil)
 			return
 		}
 
@@ -56,20 +56,20 @@ func handleCreatePet(app *application.Config) http.Handler {
 		assetDiskPath, err := app.GetAssetDiskPath(assetPath)
 
 		if err != nil {
-			application.RespondWithError(w, http.StatusInternalServerError, "Unable to get asset disk path", err)
+			app.RespondWithError(w, http.StatusInternalServerError, "Unable to get asset disk path", err)
 			return
 		}
 
 		// #nosec G304 -- assetDiskPath is server-generated and sanitized in getAssetDiskPath
 		dst, err := os.Create(assetDiskPath)
 		if err != nil {
-			application.RespondWithError(w, http.StatusInternalServerError, "Unable to create file", err)
+			app.RespondWithError(w, http.StatusInternalServerError, "Unable to create file", err)
 			return
 		}
 		defer dst.Close()
 
 		if _, err := io.Copy(dst, file); err != nil {
-			application.RespondWithError(w, http.StatusInternalServerError, "Unable to save file", err)
+			app.RespondWithError(w, http.StatusInternalServerError, "Unable to save file", err)
 			return
 		}
 
@@ -82,7 +82,7 @@ func handleCreatePet(app *application.Config) http.Handler {
 		imageID, err := database.CreatePetImage(url)
 		log.Println(imageID)
 		if err != nil {
-			application.RespondWithError(w, http.StatusInternalServerError, "Unable to create pet image", err)
+			app.RespondWithError(w, http.StatusInternalServerError, "Unable to create pet image", err)
 			return
 		}
 
@@ -95,10 +95,10 @@ func handleCreatePet(app *application.Config) http.Handler {
 
 		err = database.CreatePet(pet)
 		if err != nil {
-			application.RespondWithError(w, http.StatusInternalServerError, "Unable to create pet", err)
+			app.RespondWithError(w, http.StatusInternalServerError, "Unable to create pet", err)
 			return
 		}
 
-		application.RespondWithJSON(w, http.StatusCreated, pet)
+		app.RespondWithJSON(w, http.StatusCreated, pet)
 	})
 }

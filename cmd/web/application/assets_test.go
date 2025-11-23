@@ -24,7 +24,7 @@ func TestMediaTypeToExtension(t *testing.T) {
 }
 
 func TestGetAssetDiskPath(t *testing.T) {
-	cfg := &Config{nil, nil, "/tmp", "/tmp/assets", ""}
+	cfg := NewConfig(nil, nil, "/tmp", "/tmp/assets", "")
 
 	tests := []struct {
 		inputPath string

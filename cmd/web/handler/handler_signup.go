@@ -11,7 +11,7 @@ func serveSignup(app *application.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		err := render(w, "signup", nil)
 		if err != nil {
-			application.RespondWithError(w, http.StatusInternalServerError, "Unable to render signup page", err)
+			app.RespondWithError(w, http.StatusInternalServerError, "Unable to render signup page", err)
 			return
 		}
 	})
@@ -28,7 +28,7 @@ func handleSignup(app *application.Config) http.Handler {
 		params := parameters{}
 		err := decoder.Decode(&params)
 		if err != nil {
-			application.RespondWithError(w, http.StatusBadRequest, "Invalid request payload", err)
+			app.RespondWithError(w, http.StatusBadRequest, "Invalid request payload", err)
 			return
 		}
 
@@ -36,13 +36,13 @@ func handleSignup(app *application.Config) http.Handler {
 
 		user, err := db.CreateUser(params.Email, params.Password)
 		if err != nil {
-			application.RespondWithError(w, http.StatusInternalServerError, "Unable to create user", err)
+			app.RespondWithError(w, http.StatusInternalServerError, "Unable to create user", err)
 			return
 		}
 
 		log.Printf("Created new user: %s\n", user.ID.String())
 
-		application.RespondWithJSON(w, http.StatusCreated, user)
+		app.RespondWithJSON(w, http.StatusCreated, user)
 
 	})
 }

@@ -12,7 +12,7 @@ func serveHome(app *application.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		pets, err := app.GetDB().GetAllPets()
 		if err != nil {
-			application.RespondWithError(w, 500, "unable to load pets", err)
+			app.RespondWithError(w, 500, "unable to load pets", err)
 			return
 		}
 		data := struct {
@@ -22,7 +22,7 @@ func serveHome(app *application.Config) http.Handler {
 		}
 
 		if err := render(w, "home", data); err != nil {
-			application.RespondWithError(w, 500, "failed to populate template", err)
+			app.RespondWithError(w, 500, "failed to populate template", err)
 		}
 
 	})
@@ -38,7 +38,7 @@ func handlePetConnect(app *application.Config) http.Handler {
 		// Get pet metadata from db
 		pet, err := db.GetPetByID(petID)
 		if err != nil {
-			application.RespondWithError(w, 500, "unable to load pet", err)
+			app.RespondWithError(w, 500, "unable to load pet", err)
 			return
 		}
 
@@ -55,7 +55,7 @@ func handlePetConnect(app *application.Config) http.Handler {
 		}
 
 		if err := render(w, "pet", data); err != nil {
-			application.RespondWithError(w, 500, "failed to populate template", err)
+			app.RespondWithError(w, 500, "failed to populate template", err)
 		}
 	})
 }

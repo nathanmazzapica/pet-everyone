@@ -13,7 +13,7 @@ func serveLogin(app *application.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		err := render(w, "login", nil)
 		if err != nil {
-			application.RespondWithError(w, http.StatusInternalServerError, "Unable to render login page", err)
+			app.RespondWithError(w, http.StatusInternalServerError, "Unable to render login page", err)
 			return
 		}
 	})
@@ -35,7 +35,7 @@ func handleLogin(app *application.Config) http.Handler {
 		params := parameters{}
 		err := decoder.Decode(&params)
 		if err != nil {
-			application.RespondWithError(w, http.StatusBadRequest, "Invalid request payload", err)
+			app.RespondWithError(w, http.StatusBadRequest, "Invalid request payload", err)
 			return
 		}
 
@@ -43,34 +43,34 @@ func handleLogin(app *application.Config) http.Handler {
 
 		hash, err := db.GetUserPasswordHashByEmail(params.Email)
 		if err != nil {
-			application.RespondWithError(w, http.StatusInternalServerError, "Unable to get user password hash", err)
+			app.RespondWithError(w, http.StatusInternalServerError, "Unable to get user password hash", err)
 			return
 		}
 
 		match, err := auth.CheckPasswordHash(params.Password, hash)
 		if err != nil {
-			application.RespondWithError(w, http.StatusInternalServerError, "Unable to compare password hashes", err)
+			app.RespondWithError(w, http.StatusInternalServerError, "Unable to compare password hashes", err)
 			return
 		}
 
 		if !match {
-			application.RespondWithError(w, http.StatusUnauthorized, "Invalid credentials", nil)
+			app.RespondWithError(w, http.StatusUnauthorized, "Invalid credentials", nil)
 			return
 		}
 
 		user, err := db.GetUserByEmail(params.Email)
 		if err != nil {
-			application.RespondWithError(w, http.StatusInternalServerError, "Unable to get user", err)
+			app.RespondWithError(w, http.StatusInternalServerError, "Unable to get user", err)
 			return
 		}
 
 		token := auth.GenerateSessionToken()
 		err = db.SaveSessionToken(token, user.ID.String(), time.Now().UTC().Add(time.Hour*24*30))
 		if err != nil {
-			application.RespondWithError(w, http.StatusInternalServerError, "Unable to save session token", err)
+			app.RespondWithError(w, http.StatusInternalServerError, "Unable to save session token", err)
 			return
 		}
 
-		application.RespondWithJSON(w, http.StatusOK, response{User: *user, Token: token})
+		app.RespondWithJSON(w, http.StatusOK, response{User: *user, Token: token})
 	})
 }
