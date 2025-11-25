@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"pet-everyone/cmd/web/application"
 	"pet-everyone/internal/auth"
-	"pet-everyone/internal/db"
+	"pet-everyone/internal/db/models"
 	"time"
 )
 
@@ -27,7 +27,7 @@ func handleLogin(app *application.Config) http.Handler {
 		}
 
 		type response struct {
-			db.User
+			models.User
 			Token string `json:"token"`
 		}
 
@@ -39,9 +39,7 @@ func handleLogin(app *application.Config) http.Handler {
 			return
 		}
 
-		db := app.GetDB()
-
-		hash, err := db.GetUserPasswordHashByEmail(params.Email)
+		hash, err := app.UserModel().GetPasswordHashByEmail(params.Email)
 		if err != nil {
 			app.RespondWithError(w, http.StatusInternalServerError, "Unable to get user password hash", err)
 			return
@@ -58,14 +56,14 @@ func handleLogin(app *application.Config) http.Handler {
 			return
 		}
 
-		user, err := db.GetUserByEmail(params.Email)
+		user, err := app.UserModel().GetByEmail(params.Email)
 		if err != nil {
 			app.RespondWithError(w, http.StatusInternalServerError, "Unable to get user", err)
 			return
 		}
 
 		token := auth.GenerateSessionToken()
-		err = db.SaveSessionToken(token, user.ID.String(), time.Now().UTC().Add(time.Hour*24*30))
+		err = app.SessionTokenModel().Save(token, user.ID.String(), time.Now().UTC().Add(time.Hour*24*30))
 		if err != nil {
 			app.RespondWithError(w, http.StatusInternalServerError, "Unable to save session token", err)
 			return

@@ -56,3 +56,11 @@ func Connect(cfg Config) (*Client, error) {
 
 	return &Client{db}, nil
 }
+
+func (c *Client) DB() *sql.DB {
+	return c.db
+}
+
+func (c *Client) Close() error {
+	return c.db.Close()
+}

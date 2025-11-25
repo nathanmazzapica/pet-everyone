@@ -32,9 +32,7 @@ func handleSignup(app *application.Config) http.Handler {
 			return
 		}
 
-		db := app.GetDB()
-
-		user, err := db.CreateUser(params.Email, params.Password)
+		user, err := app.UserModel().Create(params.Email, params.Password)
 		if err != nil {
 			app.RespondWithError(w, http.StatusInternalServerError, "Unable to create user", err)
 			return

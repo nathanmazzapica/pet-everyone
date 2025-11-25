@@ -1,14 +1,14 @@
-package db
+package models
 
 import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/mail"
 	"pet-everyone/internal/auth"
 	"time"
 
 	"github.com/google/uuid"
-	"net/mail"
 )
 
 var (
@@ -18,13 +18,17 @@ var (
 	ErrInvalidEmail = fmt.Errorf("invalid email address")
 )
 
+type UserModel struct {
+	DB *sql.DB
+}
+
 type User struct {
 	ID        uuid.UUID `sql:"user_id"`
 	Email     string    `sql:"email"`
 	CreatedAt time.Time `sql:"created_at"`
 }
 
-func (c *Client) CreateUser(email, password string) (*User, error) {
+func (u *UserModel) Create(email, password string) (*User, error) {
 
 	if len(email) == 0 {
 		return nil, ErrEmptyEmail
@@ -34,7 +38,7 @@ func (c *Client) CreateUser(email, password string) (*User, error) {
 		return nil, ErrInvalidEmail
 	}
 
-	exists, err := c.checkEmailExists(email)
+	exists, err := u.checkEmailExists(email)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +59,7 @@ func (c *Client) CreateUser(email, password string) (*User, error) {
 	}
 
 	query := `INSERT INTO RegisteredUser (user_id, email, password_hash) VALUES ($1, $2, $3)`
-	_, err = c.db.Exec(query, user.ID, user.Email, hash)
+	_, err = u.DB.Exec(query, user.ID, user.Email, hash)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
@@ -64,16 +68,16 @@ func (c *Client) CreateUser(email, password string) (*User, error) {
 	return user, nil
 }
 
-func (c *Client) GetUserPasswordHashByEmail(email string) (string, error) {
+func (u *UserModel) GetPasswordHashByEmail(email string) (string, error) {
 	query := `SELECT password_hash FROM RegisteredUser WHERE email = $1`
 	var hash string
-	err := c.db.QueryRow(query, email).Scan(&hash)
+	err := u.DB.QueryRow(query, email).Scan(&hash)
 	return hash, err
 }
 
-func (c *Client) GetUserByID(id *uuid.UUID) (*User, error) {
+func (u *UserModel) Get(id *uuid.UUID) (*User, error) {
 	query := `SELECT user_id, email, created_at FROM RegisteredUser WHERE user_id = $1`
-	row := c.db.QueryRow(query, id)
+	row := u.DB.QueryRow(query, id)
 
 	var user User
 	err := row.Scan(&user.ID, &user.Email, &user.CreatedAt)
@@ -83,9 +87,9 @@ func (c *Client) GetUserByID(id *uuid.UUID) (*User, error) {
 	return &user, err
 }
 
-func (c *Client) GetUserByEmail(email string) (*User, error) {
+func (u *UserModel) GetByEmail(email string) (*User, error) {
 	query := `SELECT user_id, email, created_at FROM RegisteredUser WHERE email = $1`
-	row := c.db.QueryRow(query, email)
+	row := u.DB.QueryRow(query, email)
 
 	var user User
 	err := row.Scan(&user.ID, &user.Email, &user.CreatedAt)
@@ -95,16 +99,16 @@ func (c *Client) GetUserByEmail(email string) (*User, error) {
 	return &user, err
 }
 
-func (c *Client) DeleteUser(id *uuid.UUID) error {
+func (u *UserModel) Delete(id *uuid.UUID) error {
 	query := `DELETE FROM RegisteredUser WHERE user_id = $1`
-	_, err := c.db.Exec(query, id)
+	_, err := u.DB.Exec(query, id)
 	return err
 }
 
-func (c *Client) checkEmailExists(email string) (bool, error) {
+func (u *UserModel) checkEmailExists(email string) (bool, error) {
 	query := `SELECT EXISTS (SELECT 1 FROM RegisteredUser WHERE email = $1)`
 	var exists bool
-	err := c.db.QueryRow(query, email).Scan(&exists)
+	err := u.DB.QueryRow(query, email).Scan(&exists)
 	return exists, err
 }
 

@@ -17,9 +17,7 @@ func Auth(app *application.Config) func(http.Handler) http.Handler {
 			}
 			log.Println("token:", token)
 
-			db := app.GetDB()
-
-			dbToken, err := db.GetSessionToken(token)
+			dbToken, err := app.SessionTokenModel().Get(token)
 			if err != nil {
 				app.RespondWithError(w, http.StatusUnauthorized, "Unauthorized", err)
 				return

@@ -4,19 +4,19 @@ import (
 	"log"
 	"net/http"
 	"pet-everyone/cmd/web/application"
-	"pet-everyone/internal/db"
+	"pet-everyone/internal/db/models"
 	"pet-everyone/internal/websocket"
 )
 
 func serveHome(app *application.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		pets, err := app.GetDB().GetAllPets()
+		pets, err := app.PetModel().GetAll()
 		if err != nil {
 			app.RespondWithError(w, 500, "unable to load pets", err)
 			return
 		}
 		data := struct {
-			Pets []db.Pet
+			Pets []models.Pet
 		}{
 			Pets: pets,
 		}
@@ -33,16 +33,14 @@ func handlePetConnect(app *application.Config) http.Handler {
 		petID := r.PathValue("pet_id")
 		log.Println("Handling connection for pet{", petID, "}")
 
-		db := app.GetDB()
-
 		// Get pet metadata from db
-		pet, err := db.GetPetByID(petID)
+		pet, err := app.PetModel().Get(petID)
 		if err != nil {
 			app.RespondWithError(w, 500, "unable to load pet", err)
 			return
 		}
 
-		image := db.GetPetImage(*pet.ActiveImage)
+		image := app.PetModel().GetPetImage(*pet.ActiveImage)
 
 		data := struct {
 			PetName  string

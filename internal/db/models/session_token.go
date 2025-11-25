@@ -1,4 +1,4 @@
-package db
+package models
 
 import (
 	"database/sql"
@@ -10,6 +10,10 @@ var (
 	ErrSessionTokenNotFound = errors.New("session token not found")
 )
 
+type SessionTokenModel struct {
+	DB *sql.DB
+}
+
 type SessionToken struct {
 	Token  string    `sql:"token"`
 	UserID string    `sql:"user_id"`
@@ -20,22 +24,22 @@ func (t *SessionToken) IsExpired() bool {
 	return time.Now().After(t.Expiry)
 }
 
-func (c *Client) SaveSessionToken(token string, userID string, expiry time.Time) error {
+func (s *SessionTokenModel) Save(token string, userID string, expiry time.Time) error {
 	query := `INSERT INTO SessionTokens (token, user_id, expires_at) VALUES ($1, $2, $3)`
-	_, err := c.db.Exec(query, token, userID, expiry)
+	_, err := s.DB.Exec(query, token, userID, expiry)
 	return err
 }
 
-func (c *Client) DeleteSessionToken(token string) error {
+func (s *SessionTokenModel) Delete(token string) error {
 	query := `DELETE FROM SessionTokens WHERE token = $1`
-	_, err := c.db.Exec(query, token)
+	_, err := s.DB.Exec(query, token)
 	return err
 }
 
-func (c *Client) GetSessionToken(token string) (*SessionToken, error) {
+func (s *SessionTokenModel) Get(token string) (*SessionToken, error) {
 	query := `SELECT * FROM SessionTokens WHERE token = $1`
 	var session SessionToken
-	err := c.db.QueryRow(query, token).Scan(&session.Token, &session.UserID, &session.Expiry)
+	err := s.DB.QueryRow(query, token).Scan(&session.Token, &session.UserID, &session.Expiry)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrSessionTokenNotFound

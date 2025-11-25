@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 	"pet-everyone/cmd/web/application"
-	"pet-everyone/internal/db"
+	"pet-everyone/internal/db/models"
 )
 
 func handleCreatePet(app *application.Config) http.Handler {
@@ -77,9 +77,7 @@ func handleCreatePet(app *application.Config) http.Handler {
 
 		log.Println(url)
 
-		database := app.GetDB()
-
-		imageID, err := database.CreatePetImage(url)
+		imageID, err := app.PetModel().CreatePetImage(url)
 		log.Println(imageID)
 		if err != nil {
 			app.RespondWithError(w, http.StatusInternalServerError, "Unable to create pet image", err)
@@ -87,13 +85,13 @@ func handleCreatePet(app *application.Config) http.Handler {
 		}
 
 		// TODO: Add user ID, right now for testing we're just nulling it out
-		pet := &db.Pet{
+		pet := &models.Pet{
 			Name:        petName,
 			ActiveImage: &imageID,
 			Visibility:  true,
 		}
 
-		err = database.CreatePet(pet)
+		err = app.PetModel().CreatePet(pet)
 		if err != nil {
 			app.RespondWithError(w, http.StatusInternalServerError, "Unable to create pet", err)
 			return
