@@ -1,0 +1,62 @@
+{{ define "title" }}Pet {{ .PetName }}{{ end }}
+
+{{ define "content" }}
+    <!--
+      Pet Everyone page layout:
+      - Left: Chat (aside)
+      - Center: Pet counter + hero image (section)
+      - Right: Leaderboard (aside)
+    -->
+    <div class="pet-container" role="region" aria-label="Pet Everyone layout">
+        <!-- Left: Chat Box -->
+        <aside class="card" id="chat-box" aria-label="Chat">
+            <h2 style="margin-bottom:8px;">Chat</h2>
+            <div id="chat-messages" class="chat-messages" aria-live="polite" aria-relevant="additions"></div>
+            <div class="chat-input-row">
+                <input id="chat-input" type="text" placeholder="Type a message..." aria-label="Chat message">
+                <button class="btn" id="chat-send" type="button" aria-label="Send chat">Send</button>
+            </div>
+        </aside>
+
+        <!-- Center: Counter + Pet Image -->
+        <section class="pet-center" aria-label="Pet hero">
+            <div id="pet-counter" class="pet-counter">
+                <h2 class="pet-counter-title">{{ .PetName }} has been pet <span id="pet-count">1,000,000</span> times!</h2>
+                <p class="pet-counter-sub">You have pet them <span id="user-pet-count">5,000</span> times</p>
+            </div>
+            <div class="pet-image-wrapper">
+                <img id="pet-button" class="pet-hero-image" src="{{ .ImageURL }}" alt="Photo of {{ .PetName }}">
+            </div>
+        </section>
+
+        <!-- Right: Leaderboard -->
+        <aside class="card" id="leaderboard" aria-label="Leaderboard">
+            <h2 style="margin-bottom:8px;">Top Petters</h2>
+            <table class="leaderboard-table" aria-describedby="leaderboard">
+                <thead>
+                <tr>
+                    <th scope="col">Place</th>
+                    <th scope="col">Display Name</th>
+                    <th scope="col">Pet Count</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr><td>1</td><td>sillyBeetle0862</td><td>560,560</td></tr>
+                <tr><td>2</td><td>fullCan0877</td><td>205,082</td></tr>
+                <tr><td>3</td><td>yellowBookshelf0976</td><td>174,879</td></tr>
+                <tr><td>4</td><td>spitefulCrusader0230</td><td>122,080</td></tr>
+                <tr><td>5</td><td>intellectualWatermelon0618</td><td>121,779</td></tr>
+                <tr><td>6</td><td>dastardlyFridge0001</td><td>61,189</td></tr>
+                <tr><td>7</td><td>humorousEnvissage0086</td><td>44,419</td></tr>
+                <tr><td>8</td><td>orangeComputer0828</td><td>42,665</td></tr>
+                <tr><td>9</td><td>ambitiousDog0603</td><td>37,859</td></tr>
+                <tr><td>10</td><td>lazyCorgi0777</td><td>28,130</td></tr>
+                </tbody>
+            </table>
+        </aside>
+    </div>
+
+    <!-- Lightweight JS hook variables (logic implemented server/client later) -->
+    <script>const pet_id = "{{ .PetID }}";</script>
+    <script src="/app/pet.js"></script>
+{{ end }}

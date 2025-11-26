@@ -1,19 +1,22 @@
 {{ define "title" }}Pet Everyone{{ end }}
 
 {{ define "content" }}
-    <div id="login-form-container">
-        <form id="login-form">
-            <label for="email-input">Email</label>
-            <input type="email" id="email-input" required/>
-            <label for="password-input">Password</label>
-            <input type="password" id="password-input" required/>
-            <button type="submit" id="login-button">Login</button>
-        </form>
-    </div>
-    {{ range .Pets }}
-        <div>
-            <a href="/pet/{{ .PetID }}">{{ .Name }}</a>
+    <h1 style="text-align: center;">Pets</h1>
+        <div id="pet-card-container">
+            <div class="card-container">
+                {{ range .Pets }}
+                <!-- CARD -->
+                <div class="card pet-card">
+                    <h3 class="card-title">{{ .PetName }}</h3>
+                    <img class="card-image" src="{{ .ImageURL }}"></img>
+                    <p>Total pets: 1,000,000</p>
+                    <p>Active petters: 10</p>
+                    <a class=btn href="/pet/{{ .PetID }}">Pet</a>
+                </div>
+                <!-- END CARD -->
+                {{ end }}
+            </div>
+
         </div>
-    {{ end }}
     <script src="/app/app.js"></script>
 {{ end }}

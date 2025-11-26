@@ -1,10 +1,50 @@
-{{ define "title" }}Pet {{ .PetName }}{{ end }}
+{{ define "title" }}Pet {{.PetName}}{{ end }}
 
 {{ define "content" }}
-    <h1>{{ .PetName }}</h1>
+    <!-- Pet Counter -->
+    <h2 id="counter">{{ .PetName }} has been pet <span id="pet-count">1,000</span> times!</h2>
+    <h3 id="personal-counter">You have pet them <span id="user-pet-count">100</span> times!</h3>
 
-    <img src="{{ .ImageURL }}" alt="{{ .PetName }}">
+        <!-- Game Container -->
+    <div id="game-container">
 
+        <!-- Chat Box -->
+        <div id="chat-container">
+            <div id="chat-message-container"></div>
+            <input type="text" name="chat" id="chat-input">
+            <p id="player-count" style="padding: 0 10px 8px; margin: 0;">Online Petters: 0</p>
+        </div>
+
+        <!-- Pet Image -->
+        <div id="pet-container">
+            <img src="{{ .ImageURL }}" alt="daisy the dog" id="daisy-image"/>
+        </div>
+
+        <!-- Leaderboard -->
+        <div id="leaderboard-container">
+            <table>
+                <thead>
+                <tr>
+                    <th>Place</th>
+                    <th>Display Name</th>
+                    <th>Pet Count</th>
+                </tr>
+                </thead>
+                <tbody id="leaderboard">
+                <tr><td>1</td><td>sillyBeetle0862</td><td>560,560</td></tr>
+                <tr><td>2</td><td>fullCan0877</td><td>205,082</td></tr>
+                <tr><td>3</td><td>yellowBookshelf0976</td><td>174,879</td></tr>
+                <tr><td>4</td><td>spitefulCrusader0230</td><td>122,080</td></tr>
+                <tr><td>5</td><td>intellectualWatermelon0618</td><td>121,779</td></tr>
+                <tr><td>6</td><td>dastardlyFridge0001</td><td>61,189</td></tr>
+                <tr><td>7</td><td>humorousEnvissage0086</td><td>44,419</td></tr>
+                <tr><td>8</td><td>orangeComputer0828</td><td>42,665</td></tr>
+                <tr><td>9</td><td>ambitiousDog0603</td><td>37,859</td></tr>
+                <tr><td>10</td><td>lazyCorgi0777</td><td>28,130</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
     <script>const pet_id = "{{ .PetID }}";</script>
     <script src="/app/pet.js"></script>
 {{ end }}

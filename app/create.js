@@ -25,7 +25,7 @@ async function uploadPet() {
     formData.append('petImageFile', petImageFile);
 
     try {
-        const res = await fetch(`/pet/create/submit`, {
+        const res = await fetch(`/api/create`, {
             method: 'POST',
 			headers: {
 				Authorization: `Bearer ${localStorage.getItem('token')}`,

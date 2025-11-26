@@ -1,0 +1,83 @@
+:root {
+    --chat-left: #eef2ff;      /* lavender bubble */
+    --chat-right: #dcfce7;     /* mint bubble */
+}
+
+#chat-container {
+    border: 3px solid var(--accent-2);
+    border-radius: var(--container-border-radius);
+    height: 60%;
+    width: 25%;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--accent-2);
+    box-shadow: 0px 8px 8px rgba(0, 0, 0, 0.75);
+    overflow: hidden;
+}
+
+#chat-container.hidden {
+    display: none;
+}
+
+#chat-message-container {
+    height: 85%;
+    width: 100%;
+    overflow-y: auto;
+    border: none;
+    padding: 10px;
+    box-sizing: border-box;
+    background-color: var(--accent-5);
+}
+
+.message {
+    max-width: 86%;
+    padding: 10px 12px;
+    border-radius: 16px;
+    margin: 6px 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+}
+
+.message.me {
+    background: var(--chat-right);
+    margin-right: auto;
+}
+
+.message.them {
+    background: var(--chat-left);
+    margin-left: auto;
+}
+
+/* to be honest idk if I'm going to keep this. It seems pointless */
+.message:hover {
+    background-color: #c9c9ee;
+}
+
+#chat-input {
+    margin: 10px;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-top: 1px solid #ddd;
+    font-size: 14px;
+    border-radius: var(--container-border-radius);
+    background-color: #f9f9f9;
+    box-sizing: border-box;
+}
+
+@media screen and (max-width: 1000px) {
+    #chat-container {
+        grid-area: chat;
+        max-height: 300px;
+        min-height: 300px;
+        height: 300px;
+        width: 100%;
+        margin: 0 auto;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 10px;
+    }
+
+    #chat-input {
+        font-size: 18px;
+    }
+}

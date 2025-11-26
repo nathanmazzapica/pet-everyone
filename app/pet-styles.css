@@ -1,0 +1,259 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@400;600;700&display=swap');
+
+* {
+    font-family: "Fredoka";
+    box-sizing: border-box;
+}
+
+html, body, main {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 60px;
+    background-color: var(--dark-purple-bg);
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+h2, h3 {
+    color: ghostwhite;
+    font-weight: 850;
+    text-align: center;
+    margin: 3px;
+}
+
+h2 {
+    font-size: 2.5rem;
+}
+
+h3 {
+    font-size: 1.5rem;
+}
+
+#daisy-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30%;
+    min-width: 500px;
+    max-width: 900px;
+    z-index: 3;
+}
+
+#daisy-image {
+    padding: 0;
+    width: 100%;
+    max-width: 900px;
+    transition: all 0.15s ease;
+    user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -webkit-filter: drop-shadow(0px 5px 5px var(--daisy-shadow));
+    filter: drop-shadow(0px 5px 5px var(--daisy-shadow));
+}
+
+#daisy-image:hover {
+    cursor: grab;
+    -webkit-filter: drop-shadow(0px 7px 7px var(--daisy-shadow));
+    filter: drop-shadow(0px 7px 7px var(--daisy-shadow));
+}
+
+#daisy-image:active {
+    transition: none;
+    /*width: 87%;*/
+    transform: scale(0.87);
+    cursor: grabbing;
+}
+
+#game-container {
+    height: 80vh;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.hidden {
+    display: none;
+}
+
+.name {
+    font-weight: bold;
+    color: #2e7d32;
+}
+
+.name.other {
+    font-weight: bold;
+    color: #d772ff;
+}
+
+.notification {
+    margin: 5px 0;
+    font-weight: 300;
+    text-align: center;
+    font-size: 12px;
+    background-color: var(--dark-purple-bg);
+    color: #555;
+}
+
+.notification.connect {
+    background-color: var(--notification-positive);
+}
+
+.notification.disconnect {
+    background-color: var(--notification-negative);
+}
+
+#leaderboard-container {
+    width: 25%;
+}
+
+#chat-container.hidden {
+    display: none;
+}
+
+.control-group {
+    display: flex;
+    justify-content: space-between;
+    background-color: var(--dark-purple-bg);
+    border: 3px solid var(--dark-purple-bg);
+    border-radius: var(--container-border-radius);
+    margin: 8px auto;
+    padding: 4px;
+    min-width: 200px;
+    width: fit-content;
+}
+
+
+table {
+    border: 3px solid var(--accent-2);
+    border-radius: 8px;
+    width: 100%;
+    margin: 20px 0;
+}
+
+th, td {
+    border: 3px solid var(--accent-2);
+    padding: 12px;
+    text-align: center;
+}
+
+th {
+    background-color: var(--accent-2);
+    font-weight: bold;
+}
+
+tr {
+    background-color: var(--accent-5);
+}
+
+.toast.hide {
+    top: -10em;
+}
+
+.toast {
+    transition: opacity 0.5s ease, top 0.5s ease;
+    box-shadow: 0px 8px 8px rgba(0, 0, 0, 0.75);
+    background-color: var(--soft-purple-bg);
+    border: 3px solid #bfbfee;
+    border-radius: var(--container-border-radius);
+    padding: 3px 4px;
+    position: absolute;
+    top: 7em;
+    right: 50%;
+    transform: translate(50%);
+    width: 10%;
+    min-width: 400px;
+    opacity: 1;
+}
+
+.toast.fade {
+    transition: opacity 0.5s ease, top 2s ease-out;
+    top: -10em;
+    opacity: 0;
+}
+
+.toast h4 {
+    margin-top: 1em;
+    margin-bottom: 2px;
+}
+
+.toast p {
+    margin-top: 2px;
+}
+
+.particle {
+    position: absolute;
+    background-color: white;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 2; /* Ensure particles appear above */
+}
+
+
+
+@media screen and (max-width: 768px) {
+
+    body {
+        overflow: auto;
+    }
+
+    #game-container {
+        display: grid;
+        grid-template-rows: auto auto auto;
+        grid-template-areas:
+            "chat"
+            "daisy"
+            "leaderboard";
+        gap: 20px; /* Adjust spacing between elements */
+        padding: 20px; /* Add some padding for better alignment */
+    }
+
+    #leaderboard-container {
+        grid-area: leaderboard;
+        display: none;
+        max-height: 300px;
+        height: auto;
+        width: 100%;
+        margin: 0 auto;
+        overflow-y: auto;
+        scrollbar-width: none;
+        border-radius: 8px;
+        padding: 10px;
+    }
+
+    #daisy-container {
+        grid-area: daisy;
+        margin: 0 auto;
+        text-align: center;
+        padding: 10px;
+    }
+}
+
+@media screen and (max-width: 1000px) and (max-height: 800px) {
+
+    #game-container {
+        display: grid;
+        grid-template-rows: auto auto auto;
+        grid-template-areas:
+            "daisy"
+            "chat";
+        gap: 20px;
+        padding: 20px;
+    }
+
+    #leaderboard-container {
+        display: none;
+    }
+}
