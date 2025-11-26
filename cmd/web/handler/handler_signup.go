@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"pet-everyone/cmd/web/application"
 )
@@ -32,15 +31,20 @@ func handleSignup(app *application.Config) http.Handler {
 			return
 		}
 
-		user, err := app.UserModel().Create(params.Email, params.Password)
+		err = app.Signup(params.Email, params.Password)
 		if err != nil {
 			app.RespondWithError(w, http.StatusInternalServerError, "Unable to create user", err)
 			return
 		}
 
-		log.Printf("Created new user: %s\n", user.ID.String())
+		// temp
+		type successResponse struct {
+			Message string `json:"message"`
+		}
 
-		app.RespondWithJSON(w, http.StatusCreated, user)
+		app.RespondWithJSON(w, http.StatusCreated, successResponse{
+			Message: "Successfully created user",
+		})
 
 	})
 }

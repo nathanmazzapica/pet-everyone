@@ -1,13 +1,9 @@
 package handler
 
 import (
-	"io"
 	"log"
-	"mime"
 	"net/http"
-	"os"
 	"pet-everyone/cmd/web/application"
-	"pet-everyone/internal/db/models"
 )
 
 func handleCreatePet(app *application.Config) http.Handler {
@@ -42,57 +38,9 @@ func handleCreatePet(app *application.Config) http.Handler {
 		}
 		defer file.Close()
 
-		mediaType, _, err := mime.ParseMediaType(header.Header.Get("Content-Type"))
+		pet, err := app.CreateNewPet(petName, file, header)
 		if err != nil {
-			app.RespondWithError(w, http.StatusInternalServerError, "could not read pet image media type", nil)
-		}
-
-		if mediaType != "image/jpeg" && mediaType != "image/png" {
-			app.RespondWithError(w, http.StatusBadRequest, "Invalid file type", nil)
-			return
-		}
-
-		assetPath := application.GetAssetPath(mediaType)
-		assetDiskPath, err := app.GetAssetDiskPath(assetPath)
-
-		if err != nil {
-			app.RespondWithError(w, http.StatusInternalServerError, "Unable to get asset disk path", err)
-			return
-		}
-
-		// #nosec G304 -- assetDiskPath is server-generated and sanitized in getAssetDiskPath
-		dst, err := os.Create(assetDiskPath)
-		if err != nil {
-			app.RespondWithError(w, http.StatusInternalServerError, "Unable to create file", err)
-			return
-		}
-		defer dst.Close()
-
-		if _, err := io.Copy(dst, file); err != nil {
-			app.RespondWithError(w, http.StatusInternalServerError, "Unable to save file", err)
-			return
-		}
-
-		url := app.GetAssetURL(assetPath)
-
-		log.Println(url)
-
-		imageID, err := app.PetModel().CreatePetImage(url)
-		log.Println(imageID)
-		if err != nil {
-			app.RespondWithError(w, http.StatusInternalServerError, "Unable to create pet image", err)
-			return
-		}
-
-		// TODO: Add user ID, right now for testing we're just nulling it out
-		pet := &models.Pet{
-			Name:        petName,
-			ActiveImage: &imageID,
-			Visibility:  true,
-		}
-
-		err = app.PetModel().CreatePet(pet)
-		if err != nil {
+			log.Println("error creating pet:", err)
 			app.RespondWithError(w, http.StatusInternalServerError, "Unable to create pet", err)
 			return
 		}

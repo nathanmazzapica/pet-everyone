@@ -56,3 +56,7 @@ func mediaTypeToExtension(mediaType string) string {
 	}
 	return "." + parts[1]
 }
+
+func (app *Config) placeholderImage() string {
+	return "/assets/placeholder.jpg"
+}

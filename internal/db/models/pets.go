@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -66,7 +65,7 @@ func (p *PetModel) Get(id string) (*Pet, error) {
 	return &pet, nil
 }
 
-func (p *PetModel) GetPetImage(id string) string {
+func (p *PetModel) GetPetImage(id *string) (string, error) {
 	var imageURL string
 	query := `SELECT image_url FROM PetImage WHERE image_id = $1;`
 
@@ -74,14 +73,10 @@ func (p *PetModel) GetPetImage(id string) string {
 
 	err := row.Scan(&imageURL)
 	if err != nil {
-		log.Printf("Failed to fetch image: %v\n", err)
-
-		// temporary
-		placeholder := "/assets/placeholder.jpg"
-		return placeholder
+		return "", err
 	}
 
-	return imageURL
+	return imageURL, err
 }
 
 func (p *PetModel) CreatePet(pet *Pet) error {

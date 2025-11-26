@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"errors"
+	"log"
 	"time"
 )
 
@@ -16,8 +17,8 @@ type SessionTokenModel struct {
 
 type SessionToken struct {
 	Token  string    `sql:"token"`
-	UserID string    `sql:"user_id"`
 	Expiry time.Time `sql:"expires_at"`
+	UserID string    `sql:"user_id"`
 }
 
 func (t *SessionToken) IsExpired() bool {
@@ -39,8 +40,9 @@ func (s *SessionTokenModel) Delete(token string) error {
 func (s *SessionTokenModel) Get(token string) (*SessionToken, error) {
 	query := `SELECT * FROM SessionTokens WHERE token = $1`
 	var session SessionToken
-	err := s.DB.QueryRow(query, token).Scan(&session.Token, &session.UserID, &session.Expiry)
+	err := s.DB.QueryRow(query, token).Scan(&session.Token, &session.Expiry, &session.UserID)
 	if err != nil {
+		log.Println(err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrSessionTokenNotFound
 		}

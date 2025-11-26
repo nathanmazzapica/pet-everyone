@@ -38,6 +38,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error connecting to db: %v", err)
 	}
+	defer client.Close()
 	log.Println("Connected to db")
 
 	app := application.NewConfig(
