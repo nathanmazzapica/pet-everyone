@@ -7,6 +7,7 @@ import (
 	"pet-everyone/cmd/web/application"
 	"pet-everyone/cmd/web/handler"
 	"pet-everyone/internal/db"
+	"pet-everyone/internal/db/models"
 	"pet-everyone/internal/registry"
 	"time"
 
@@ -43,7 +44,7 @@ func main() {
 
 	app := application.NewConfig(
 		client,
-		registry.NewHubRegistry(),
+		registry.NewHubRegistry(&models.PetModel{DB: client.DB()}),
 		filepathRoot,
 		assetsRoot,
 		port,

@@ -79,6 +79,18 @@ func (p *PetModel) GetPetImage(id *string) (string, error) {
 	return imageURL, err
 }
 
+func (p *PetModel) GetPetCount(id *string) (int, error) {
+	var count int
+	query := `SELECT SUM(click_count) FROM UserPetsClickCount WHERE pet_id = $1;`
+
+	row := p.DB.QueryRow(query, id)
+	err := row.Scan(&count)
+	if err != nil {
+		return -1, err
+	}
+	return count, err
+}
+
 func (p *PetModel) CreatePet(pet *Pet) error {
 	query := `INSERT INTO pet (pet_id, pet_name, visibility, active_image) VALUES ($1, $2, $3, $4);`
 

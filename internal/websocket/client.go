@@ -50,7 +50,7 @@ func (c *Client) readPump() {
 			break
 		}
 		log.Printf("recv: %s\n", message)
-		c.hub.broadcast <- message
+		c.hub.commands <- message
 	}
 }
 

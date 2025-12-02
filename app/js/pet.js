@@ -1,6 +1,7 @@
-// Intentionally stripped business logic.
-// Keep structure and function names so you can implement later.
-// WebSocket placeholder
+// ignoreQueue is used to keep optimistic rendering from duplicating clicks
+// I am choosing to do this over server-side tracking of command ownership because it's simpler, and the client isn't authoritative anyway. This is only for rendering purposes
+let ignoreQueue = 0;
+
 let ws = new WebSocket(`ws://localhost:8082/pet/${pet_id}/ws`)
 
 if (ws) {
@@ -8,8 +9,29 @@ if (ws) {
 	  console.log("Connected to websocket")
   };
 
-  ws.onmessage = (event) => {
-	  console.log(event.data)
+  ws.onmessage = (e) => {
+	  console.log(e.data)
+	  const event = JSON.parse(e.data)
+	  console.table(event)
+	  const eventType = event.type
+	  switch (eventType) {
+		  case "pet":
+			  if (ignoreQueue > 0) {
+				  ignoreQueue--;
+				  return;
+			  }
+			  increment()
+			  break;
+		  case "petcount":
+			  setCount(Number(event.data))
+			  break;
+		  case "chat":
+			  const msgData = event.data
+			  appendChatMessage(msgData.author, msgData.msg)
+			  break;
+		  default:
+			  console.log("Unknown message type")
+	  }
   };
 
   ws.onerror = (e) => {
@@ -31,22 +53,41 @@ function getCount() {
 }
 function setCount(n) {
 	count = n;
+	updateUI();
+}
+
+function updateUI() {
+	countEl.innerText = getCount().toLocaleString();
+	personalCountEl.innerText = getCount().toLocaleString();
 }
 
 function increment() {
   // TODO: implement local increment logic and optionally send to server
 	setCount(getCount() + 1);
-	countEl.innerText = getCount().toLocaleString();
-	personalCountEl.innerText = getCount().toLocaleString();
+}
+
+// Pet button logic
+
+// petCommand is always the same, so we declare it once. no memory wasting here.
+const petCommand = {
+	"type": "pet",
+	"data": null
+}
+
+function renderOptimistic() {
+	increment();
+	ignoreQueue++;
+}
+
+function pet() {
+	countEl.classList.add('count-bump');
+	setTimeout(() => countEl.classList.remove('count-bump'), 320);
+	renderOptimistic();
+	ws.send(JSON.stringify(petCommand))
 }
 
 if (petBtn) {
-  petBtn.addEventListener('click', () => {
-	  countEl.classList.add('count-bump');
-	  setTimeout(() => countEl.classList.remove('count-bump'), 320);
-	  increment();
-	  ws.send('c')
-  });
+  petBtn.addEventListener('click', pet);
 }
 
 // Chat UI
@@ -69,8 +110,14 @@ function sendChat() {
 	// some crisp optimistic rendering
 	appendChatMessage('You', msg);
 
-	data = {msg: msg}
-	ws.send(JSON.stringify(data));
+	const msgData = {
+		"type": "chat",
+		"data": {
+			"msg": msg,
+			"author": "test"
+		}
+	}
+	ws.send(JSON.stringify(msgData));
 	chatInput.value = '';
 }
 
@@ -83,6 +130,7 @@ if (chatInput) {
     }
   });
 }
+
 
 
 function setGradientPosition(dog) {
