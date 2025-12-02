@@ -38,12 +38,12 @@
 }
 
 .message.me {
-    background: var(--chat-right);
+    background: var(--accent-3);
     margin-right: auto;
 }
 
 .message.them {
-    background: var(--chat-left);
+    background: var(--accent-3-contrast);
     margin-left: auto;
 }
 

@@ -129,7 +129,7 @@ func (app *Config) GetPetData(petID string) (*dto.Pet, error) {
 func (app *Config) GetPetImage(imageID *string) string {
 	imageURL, err := app.petModel.GetPetImage(imageID)
 	if err != nil {
-		if errors.Is(sql.ErrNoRows, err) {
+		if errors.Is(err, sql.ErrNoRows) {
 			app.Logger().Warn("Pet missing imageURL", "imageID", imageID)
 		} else {
 			app.Logger().Error("Unable to get pet imageURL", "imageID", imageID, "err", err)
