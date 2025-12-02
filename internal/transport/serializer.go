@@ -74,7 +74,7 @@ func (s *JSONSerializer) readPump() {
 		if err != nil {
 			// TODO: handle broken payload
 			log.Println(err)
-			return
+			continue
 		}
 		s.out <- envelope
 
