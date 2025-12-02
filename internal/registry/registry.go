@@ -10,7 +10,6 @@ import (
 )
 
 type HubRegistry struct {
-	serializer transport.Serializer
 	mu         sync.RWMutex
 	Hubs       map[string]*websocket.Hub
 	petModel   *models.PetModel
