@@ -81,7 +81,7 @@ func (p *PetModel) GetPetImage(id *string) (string, error) {
 
 func (p *PetModel) GetPetCount(id *string) (int, error) {
 	var count int
-	query := `SELECT SUM(click_count) FROM UserPetsClickCount WHERE pet_id = $1;`
+	query := `SELECT COALESCE(SUM(click_count), 0) FROM UserPetsClickCount WHERE pet_id = $1;`
 
 	row := p.DB.QueryRow(query, id)
 	err := row.Scan(&count)
