@@ -10,10 +10,18 @@ if (ws) {
   };
 
   ws.onmessage = (e) => {
-	  console.log(e.data)
-	  const event = JSON.parse(e.data)
-	  console.table(event)
-	  const eventType = event.type
+	  console.log(e.data);
+      let event;
+
+      try {
+        event = JSON.parse(e.data);
+      } catch(exception) {
+          console.error(`Invalid JSON event from server: ${e.data}`)
+          return
+      }
+
+	  console.table(event);
+	  const eventType = event.type;
 	  switch (eventType) {
 		  case "pet":
 			  if (ignoreQueue > 0) {
@@ -23,14 +31,14 @@ if (ws) {
 			  increment()
 			  break;
 		  case "petcount":
-			  setCount(Number(event.data))
+			  setCount(Number(event.data));
 			  break;
 		  case "chat":
-			  const msgData = event.data
-			  appendChatMessage(msgData.author, msgData.msg)
+			  const msgData = event.data;
+			  appendChatMessage(msgData.author, msgData.msg);
 			  break;
 		  default:
-			  console.log("Unknown message type")
+			  console.log("Unknown message type");
 	  }
   };
 
