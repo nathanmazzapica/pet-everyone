@@ -4,3 +4,7 @@
 out
 assets/
 .DS_Store
+**/venv/
+**/*.png
+**/*.jpg
+**/*.jpeg
