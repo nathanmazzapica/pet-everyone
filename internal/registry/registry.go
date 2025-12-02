@@ -10,9 +10,9 @@ import (
 )
 
 type HubRegistry struct {
-	mu         sync.RWMutex
-	Hubs       map[string]*websocket.Hub
-	petModel   *models.PetModel
+	mu       sync.RWMutex
+	Hubs     map[string]*websocket.Hub
+	petModel *models.PetModel
 }
 
 func NewHubRegistry(petModel *models.PetModel) *HubRegistry {
