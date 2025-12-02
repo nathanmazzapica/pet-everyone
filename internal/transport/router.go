@@ -51,8 +51,19 @@ func (r *Router) Route() {
 		case "petcount":
 			r.petService.BroadcastPetCount()
 		case "chat":
-			msgData := cmd.Data.(map[string]interface{})
-			r.chatService.Send(msgData["msg"].(string))
+			msgData, ok := cmd.Data.(map[string]interface{})
+			if !ok {
+				log.Println("error: chat command Data is not a map[string]interface{}", cmd.Data)
+				continue
+			}
+
+			msg, ok := msgData["msg"].(string)
+			if !ok {
+				log.Println("error: chat command Data is missing 'msg' field", cmd.Data)
+				continue
+			}
+
+			r.chatService.Send(msg)
 
 		default:
 			log.Println("unknown command:", cmd)
