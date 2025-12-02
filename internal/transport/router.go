@@ -32,7 +32,12 @@ func NewRouter(petService *service.PetService, chatService *service.ChatService)
 
 func (r *Router) Route() {
 	for {
-		dat := <-r.in
+		dat, ok := <-r.in
+		if !ok {
+			// Channel is closed, break loop
+			return
+		}
+
 		cmd := Command{}
 		err := json.Unmarshal(dat, &cmd)
 		if err != nil {
