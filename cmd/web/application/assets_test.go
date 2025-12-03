@@ -15,7 +15,7 @@ func TestMediaTypeToExtension(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.mimeType, func(t *testing.T) {
-			result := mediaTypeToExtension(tt.mimeType)
+			result := MediaTypeToExtension(tt.mimeType)
 			if result != tt.expected {
 				t.Errorf("Expected %s, got %s", tt.expected, result)
 			}

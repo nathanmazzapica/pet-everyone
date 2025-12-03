@@ -25,7 +25,7 @@ func GetAssetPath(mediaType string) string {
 		panic("failed to generate random bytes")
 	}
 	id := base64.RawURLEncoding.EncodeToString(base)
-	ext := mediaTypeToExtension(mediaType)
+	ext := MediaTypeToExtension(mediaType)
 	return fmt.Sprintf("%s%s", id, ext)
 }
 
@@ -49,7 +49,7 @@ func (app *Config) GetAssetURL(assetPath string) string {
 	return fmt.Sprintf("http://localhost:%s/assets/%s", app.GetPort(), assetPath)
 }
 
-func mediaTypeToExtension(mediaType string) string {
+func MediaTypeToExtension(mediaType string) string {
 	parts := strings.Split(mediaType, "/")
 	if len(parts) != 2 {
 		return ".bin"
