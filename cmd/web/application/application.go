@@ -4,17 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
-	"mime"
-	"mime/multipart"
 	"os"
-	"os/exec"
 	"pet-everyone/internal/db"
 	"pet-everyone/internal/db/models"
 	"pet-everyone/internal/dto"
 	"pet-everyone/internal/registry"
-	"strings"
 )
 
 type Config struct {
@@ -40,97 +35,6 @@ func NewConfig(pool *db.Client, registry *registry.HubRegistry, filepathRoot str
 		port:              port,
 		logger:            slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})),
 	}
-}
-
-func (app *Config) CreateNewPet(name string, img multipart.File, header *multipart.FileHeader) (*models.Pet, error) {
-
-	// Stage 1 : Validate image
-	mediaType, _, err := mime.ParseMediaType(header.Header.Get("Content-Type"))
-	if err != nil {
-		return nil, err
-	}
-
-	if mediaType != "image/jpeg" && mediaType != "image/png" {
-		return nil, err
-	}
-
-	ext := MediaTypeToExtension(mediaType)
-
-	// Stage 1.5 : Process image
-	ptrn := fmt.Sprintf("upload-*%s", ext)
-	tmpFile, err := os.CreateTemp("", ptrn)
-	if err != nil {
-		return nil, err
-	}
-
-	defer tmpFile.Close()
-	defer os.Remove(tmpFile.Name())
-
-	app.logger.Info("Processing image", "tmpFile", tmpFile.Name())
-
-	if _, err := io.Copy(tmpFile, img); err != nil {
-		return nil, err
-	}
-
-	pythonExecutable := "./scripts/py/.venv/bin/python"
-	removeBGScriptPath := "./scripts/py/bg-removal/main.py"
-
-	cmd := exec.Command(pythonExecutable, removeBGScriptPath, tmpFile.Name())
-
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, fmt.Errorf("failed to process image: %s", err)
-	}
-
-	outputPath := strings.TrimSpace(string(out))
-
-	processedImg, err := os.Open(outputPath)
-	if err != nil {
-		return nil, err
-	}
-	defer processedImg.Close()
-
-	// Stage 2 : Save image to disk
-
-	// TEMPORARY!!!! WILL BE REPLACED WITH S3 LATER
-	assetPath := GetAssetPath(mediaType)
-	assetDiskPath, err := app.GetAssetDiskPath(assetPath)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// #nosec G304 -- assetDiskPath is server-generated and sanitized in getAssetDiskPath
-	dst, err := os.Create(assetDiskPath)
-	if err != nil {
-		return nil, err
-	}
-	defer dst.Close()
-
-	if _, err := io.Copy(dst, processedImg); err != nil {
-		return nil, err
-	}
-
-	imageURL := app.GetAssetURL(assetPath)
-
-	imageID, err := app.petModel.CreatePetImage(imageURL)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: Add user ID, right now for testing we're just nulling it out
-	pet := &models.Pet{
-		Name:        name,
-		ActiveImage: &imageID,
-		Visibility:  true,
-	}
-
-	err = app.petModel.CreatePet(pet)
-	if err != nil {
-		return nil, err
-	}
-
-	return pet, nil
 }
 
 func (app *Config) GetAllPets() (*dto.PetList, error) {
