@@ -55,8 +55,8 @@ body {
   line-height: 1.5;
   color: var(--ink-900);
   /* Cozy radial gradient inspired by screenshot (green vignette) */
-  /*background: radial-gradient(1200px 600px at 50% -10%, var(--bg-0) 0%, var(--bg-1) 45%, var(--bg-2) 100%);*/
-    background: radial-gradient(1200px 600px at 50% -10%, var(--daisy-gradient-start) 0%, var(--daisy-gradient-end) 100%);
+  background: radial-gradient(circle at center, var(--daisy-gradient-start) 0%, var(--daisy-gradient-end) 100%);
+    /*background-color: var(--bg-2);*/
     display: flex;
     flex-direction: column;
 }
@@ -72,11 +72,13 @@ main {
 }
 
 header {
+    display: flex;
   background: linear-gradient(90deg, var(--accent), var(--accent-2)); /* violet-700 to purple-600 */
   color: #ffffff;
   padding: 14px 20px;
   margin: 0;
   box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    gap: 16px;
 }
 
 header a { color: #ffffff; font-weight: 600; text-decoration: none; }

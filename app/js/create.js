@@ -3,14 +3,38 @@ document.addEventListener("DOMContentLoaded", (event) => {
 		alert("You must be logged in to create a pet");
 		window.location.href = "/login";
 	}
+	displayImagePreview();
 });
 
 const createForm = document.getElementById('new-pet-form')
+
+
+const imageInput = document.getElementById('pet-image-input')
+imageInput.addEventListener('change', displayImagePreview)
+
+function displayImagePreview() {
+	if (!imageInput.files || !imageInput.files[0]) {
+		return;
+	}
+	const file = imageInput.files[0];
+	const reader = new FileReader();
+	reader.onload = () => {
+		const output = document.getElementById('pet-image-preview');
+		output.src = reader.result;
+	}
+	reader.readAsDataURL(file);
+}
+
+const processingPopup = document.getElementById('processing-popup')
 
 createForm.addEventListener('submit', e => {
     e.preventDefault()
     uploadPet()
 })
+
+function addPeriod() {
+	document.getElementById('processing-text').innerText += '.';
+}
 
 async function uploadPet() {
     const petName = document.getElementById('pet-name-input').value;
@@ -25,6 +49,8 @@ async function uploadPet() {
     formData.append('petImageFile', petImageFile);
 
     try {
+		processingPopup.classList.remove('hidden')
+		setInterval(addPeriod, 500)
         const res = await fetch(`/api/create`, {
             method: 'POST',
 			headers: {
@@ -42,5 +68,7 @@ async function uploadPet() {
         window.location.href = `/pet/${data.PetID}`
     } catch(error) {
         alert(`Failed to create pet. Error: ${error}`);
+		processingPopup.classList.add('hidden')
+		document.getElementById('processing-text').innerText = 'Processing';
     }
 }

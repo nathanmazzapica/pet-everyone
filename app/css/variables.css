@@ -1,12 +1,40 @@
 :root {
-    /* colors */
-    --henry-gradient-start: #ffd260;
-    --henry-gradient-end: #ff9b3a;
-    --henry-shadow: #ff9060;
+
+    --bg-0: #edf7ef;           /* light mint tint */
+    --bg-1: #dff3e7;           /* soft green */
+    --bg-2: #cfeadf;           /* deeper mint */
+    --ink-900: #102a43;        /* deep readable text */
+    --ink-700: #334e68;        /* muted text */
+    --surface: #ffffff;        /* card surface */
+    --surface-2: #f7f8fb;      /* subtle surface */
+    --border: rgba(16, 42, 67, 0.10);
+    --shadow-md: 0 10px 24px rgba(16, 42, 67, 0.12);
+    --shadow-lg: 0 18px 44px rgba(16, 42, 67, 0.16);
+
+    --accent: #8b5cf6;         /* purple */
+    --accent-2: #a78bfa;       /* lighter purple */
+    --accent-3: #c4b5fd;       /* light */
+    --accent-4: #e1d7ff;
+    --accent-5: #f9f5ff;
+    --mint: #34d399;           /* mint accent */
+
+    --chat-left: #eef2ff;      /* lavender bubble */
+    --chat-right: #dcfce7;     /* mint bubble */
+
+    --radius-sm: 12px;
+    --radius: 16px;
+    --radius-lg: 24px;
+
+    --font-sans: 'Fredoka', 'Quicksand', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
 
     --daisy-gradient-start: #d0f0c0;
     --daisy-gradient-end: #0e250f;
     --daisy-shadow: #2e7d32;
+
+    /* colors */
+    --henry-gradient-start: #ffd260;
+    --henry-gradient-end: #ff9b3a;
+    --henry-shadow: #ff9060;
 
     --soft-purple-bg: #E6E6FA;
     --dark-purple-bg: #bfbfee;
@@ -18,11 +46,6 @@
     --daisy-border: 3px solid var(--dark-purple-bg);
     --container-border-radius: 8px;
 
-    --accent: #8b5cf6;         /* purple */
-    --accent-2: #a78bfa;       /* lighter purple */
-    --accent-3: #c4b5fd;       /* light */
-    --accent-4: #e1d7ff;
-    --accent-5: #f9f5ff;
 
     --accent-3-contrast: #fffcd8;
 }

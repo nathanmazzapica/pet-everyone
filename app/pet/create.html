@@ -3,20 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <title>New Pet</title>
+    <link rel="stylesheet" href="/app/css/variables.css">
+    <link rel="stylesheet" href="/app/css/styles.css">
 </head>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@400;600;700&display=swap');
+    /*body {*/
+    /*    height: 100vh;*/
+    /*    font-family: "Fredoka";*/
+    /*    background-color: var(--ink-700);*/
+    /*    display: flex;*/
+    /*    flex-direction: column;*/
+    /*    justify-content: center;*/
+    /*    align-items: center;*/
+    /*}*/
+    main {
+        justify-content: center;
+        align-items: center;
+    }
+
+    button {
+        padding: 10px 20px;
+        border-radius: 16px;
+        background-color: var(--accent-2);
+        color: white;
+        border: none;
+        font-weight: bold;
+    }
+
+    button:hover {
+        background-color: var(--accent);
+    }
+
+    button:active {
+        background-color: var(--accent-3);
+    }
+
+    #form-section {
+        margin: 20px auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        width: 600px;
+        min-height: 600px;
+        background-color: var(--soft-purple-bg);
+        border: 3px solid var(--accent-2);
+        border-radius: 36px;
+        padding: 20px;
+        box-shadow: var(--shadow-lg);
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .input-label-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+
+    #processing-popup {
+        color: white;
+        font-size: 3rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 100;
+        visibility: visible;
+        pointer-events: auto;
+        transition: opacity 0.5s ease;
+        opacity: 1;
+    }
+
+    #processing-popup.hidden {
+        opacity: 0;
+        pointer-events: none;
+        z-index: -1;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.5s ease;
+        transition-delay: 0.5s;
+        transition-property: opacity, z-index;
+        transition-timing-function: ease;
+    }
+
+    #pet-image-preview {
+        border: var(--daisy-border);
+        width: 480px;
+        height: 270px;
+        border-radius: 16px;
+    }
+
+    #loading-image {
+        animation: animate-loading 8s linear infinite;
+    }
+
+    @keyframes animate-loading {
+        0% {transform: rotate(0deg);}
+        100% {transform: rotate(360deg);}
+    }
+</style>
 <body>
-<h1>Create New Pet</h1>
+<header>
+    <a href="/">Home</a>
+    <a href="/pet/create">Create Pet</a>
+</header>
+<main>
+<div id="processing-popup" class="hidden">
+    <p id="processing-text" style="color: white; margin: 10px;">Processing</p>
+    <img id="loading-image" src="/app/images/DAISY.png" alt="loading" style="max-width: 200px;">
+</div>
 <div id="form-section">
+    <h1>Create New Pet</h1>
     <form id="new-pet-form">
-      <label for="pet-name-input">Name</label>
-      <input type="text" id="pet-name-input" required/>
-      <br>
-      <label for="pet-image-input">Image</label>
-      <input type="file" id="pet-image-input" accept="image/*" required/>
-      <img id="pet-image" />
+        <div class="input-label-group">
+            <label for="pet-name-input">Name</label>
+            <input type="text" id="pet-name-input" required/>
+        </div>
+        <div class="input-label-group">
+            <label for="pet-image-input">Image</label>
+            <input type="file" id="pet-image-input" accept="image/*" required/>
+        </div>
+        <label for="pet-image-preview">Image Preview</label>
+      <img id="pet-image-preview" src="/app/images/placeholder-trans.png" alt="" />
+        <br>
       <button type="submit">create!</button>
     </form>
 </div>
+</main>
 <script src="/app/js/create.js"></script>
 </body>
 </html>
