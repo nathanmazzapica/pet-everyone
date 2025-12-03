@@ -65,7 +65,7 @@ async function uploadPet() {
         const data = await res.json();
         console.table(data)
         console.log('Successfully created');
-        window.location.href = `/pet/${data.PetID}`
+        window.location.href = `/pet/${data}`
     } catch(error) {
         alert(`Failed to create pet. Error: ${error}`);
 		processingPopup.classList.add('hidden')
