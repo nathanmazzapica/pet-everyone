@@ -47,9 +47,9 @@ if __name__ == "__main__":
         printerr("invalid number of args")
         sys.exit(1)   
 
-    target = sys.argv[1]
+    input_file = sys.argv[1]
 
-    res = process(target)
+    res = process(input_file)
 
     if res is None:
         sys.exit(1)
