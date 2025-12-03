@@ -94,6 +94,9 @@ header a:hover { text-decoration: underline; }
   background: rgba(255 ,255,255,0.6);
   backdrop-filter: blur(2px);
   border: 1px solid var(--border);
+    overflow-y: scroll;
+    max-height: 90vh;
+    scrollbar-width: none;
 }
 
 .card {
