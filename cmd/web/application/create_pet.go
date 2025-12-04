@@ -62,6 +62,9 @@ func (app *Config) CreateNewPet(name string, img multipart.File, header *multipa
 	// Stage 4 : Save pet to database
 
 	pet, err := app.createPetInDatabase(name, imageURL)
+	if err != nil {
+		return "", err
+	}
 
 	return pet.PetID, nil
 }
