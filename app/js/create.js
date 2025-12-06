@@ -47,9 +47,9 @@ async function uploadPet() {
     formData.append('petName', petName);
     formData.append('petImageFile', petImageFile);
 
+	const loadingEffect = setInterval(addPeriod, 500)
     try {
 		processingPopup.classList.remove('hidden')
-		setInterval(addPeriod, 500)
         const res = await fetch(`/api/create`, {
             method: 'POST',
 			headers: {
@@ -68,6 +68,7 @@ async function uploadPet() {
     } catch(error) {
         alert(`Failed to create pet. Error: ${error}`);
 		processingPopup.classList.add('hidden')
+		clearInterval(loadingEffect)
 		document.getElementById('processing-text').innerText = 'Processing';
     }
 }
