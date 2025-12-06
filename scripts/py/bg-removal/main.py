@@ -26,8 +26,8 @@ def process(target) -> Union[str, None]:
 
     output_file_name = f"{trimmed_target}-trans.png"
 
-    clcoding = WithoutBG.opensource()
-    result = clcoding.remove_background(target)
+    bg_remover = WithoutBG.opensource()
+    result = bg_remover.remove_background(target)
 
     try:
         result.save(output_file_name)
