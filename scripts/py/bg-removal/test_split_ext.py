@@ -33,7 +33,6 @@ def test_trim_ext_base64():
 
     for i in range(1000):
         byte_length = 32
-        byte_length = 32
         b64 = secrets.token_urlsafe(byte_length)
 
         encoded_filename = f"{b64}.jpeg"
