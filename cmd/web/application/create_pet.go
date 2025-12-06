@@ -76,11 +76,11 @@ func (app *Config) CreateNewPet(name string, img multipart.File, header *multipa
 func (app *Config) processImage(img multipart.File, ext string) (*os.File, error) {
 	ptrn := fmt.Sprintf("upload-*%s", ext)
 	tmpFile, err := os.CreateTemp("", ptrn)
-	defer tmpFile.Close()
-	defer os.Remove(tmpFile.Name())
 	if err != nil {
 		return nil, err
 	}
+	defer tmpFile.Close()
+	defer os.Remove(tmpFile.Name())
 
 	app.logger.Info("Processing image", "tmpFile", tmpFile.Name())
 
