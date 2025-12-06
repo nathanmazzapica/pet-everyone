@@ -34,6 +34,8 @@ func (app *Config) CreateNewPet(name string, img multipart.File, header *multipa
 	if err != nil {
 		return "", err
 	}
+
+	defer os.Remove(processedImg.Name())
 	defer processedImg.Close()
 
 	// Stage 3 : Save processed image to disk
@@ -57,6 +59,8 @@ func (app *Config) CreateNewPet(name string, img multipart.File, header *multipa
 		return "", err
 	}
 
+	app.logger.Info("Image saved to disk", "path", assetDiskPath)
+
 	imageURL := app.GetAssetURL(assetPath)
 
 	// Stage 4 : Save pet to database
@@ -72,6 +76,8 @@ func (app *Config) CreateNewPet(name string, img multipart.File, header *multipa
 func (app *Config) processImage(img multipart.File, ext string) (*os.File, error) {
 	ptrn := fmt.Sprintf("upload-*%s", ext)
 	tmpFile, err := os.CreateTemp("", ptrn)
+	defer tmpFile.Close()
+	defer os.Remove(tmpFile.Name())
 	if err != nil {
 		return nil, err
 	}
@@ -91,10 +97,6 @@ func (app *Config) processImage(img multipart.File, ext string) (*os.File, error
 	if err != nil {
 		return nil, fmt.Errorf("failed to process image: %s", err)
 	}
-
-	// Explicit file closure and removal to show we are DONE with it at this stage. Easier in my mind than defer.
-	tmpFile.Close()
-	os.Remove(tmpFile.Name())
 
 	outputPath := strings.TrimSpace(string(out))
 
