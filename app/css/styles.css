@@ -1,62 +1,20 @@
-/*
-  Pet Everyone – Playful UI Theme
-  One cohesive CSS file with:
-  - Theme variables (colors, radii, shadows)
-  - Global typography & background
-  - Layout grid for the pet page (chat / hero / leaderboard)
-  - Components: cards, chat, leaderboard, buttons
-  - Micro-interactions & animations
-*/
-
-/* Import friendly, playful fonts */
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@400;600;700&display=swap');
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-:root {
-  /* Color system (pastel + cozy) */
-  --bg-0: #edf7ef;           /* light mint tint */
-  --bg-1: #dff3e7;           /* soft green */
-  --bg-2: #cfeadf;           /* deeper mint */
-  --ink-900: #102a43;        /* deep readable text */
-  --ink-700: #334e68;        /* muted text */
-  --surface: #ffffff;        /* card surface */
-  --surface-2: #f7f8fb;      /* subtle surface */
-  --border: rgba(16, 42, 67, 0.10);
-  --shadow-md: 0 10px 24px rgba(16, 42, 67, 0.12);
-  --shadow-lg: 0 18px 44px rgba(16, 42, 67, 0.16);
-
-  --accent: #8b5cf6;         /* purple */
-  --accent-2: #a78bfa;       /* lighter purple */
-  --accent-3: #c4b5fd;       /* light */
-    --accent-4: #e1d7ff;
-    --accent-5: #f9f5ff;
-  --mint: #34d399;           /* mint accent */
-
-  --chat-left: #eef2ff;      /* lavender bubble */
-  --chat-right: #dcfce7;     /* mint bubble */
-
-  --radius-sm: 12px;
-  --radius: 16px;
-  --radius-lg: 24px;
-
-  --font-sans: 'Fredoka', 'Quicksand', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
-
-    --daisy-gradient-start: #d0f0c0;
-    --daisy-gradient-end: #0e250f;
-    --daisy-shadow: #2e7d32;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
+
 /* Base layout & typography */
-html, body { height: 100%; }
+html, body {
+    height: 100%;
+}
 
 body {
-  font-family: var(--font-sans);
-  line-height: 1.5;
-  color: var(--ink-900);
-  /* Cozy radial gradient inspired by screenshot (green vignette) */
-  background: radial-gradient(circle at center, var(--daisy-gradient-start) 0%, var(--daisy-gradient-end) 100%);
-    /*background-color: var(--bg-2);*/
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    color: var(--ink-900);
+    background: radial-gradient(circle at center, var(--daisy-gradient-start) 0%, var(--daisy-gradient-end) 100%);
     display: flex;
     flex-direction: column;
 }
@@ -73,45 +31,54 @@ main {
 
 header {
     display: flex;
-  background: linear-gradient(90deg, var(--accent), var(--accent-2)); /* violet-700 to purple-600 */
-  color: #ffffff;
-  padding: 14px 20px;
-  margin: 0;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    background: linear-gradient(90deg, var(--accent), var(--accent-2)); /* violet-700 to purple-600 */
+    color: #ffffff;
+    padding: 14px 20px;
+    margin: 0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
     gap: 16px;
 }
 
-header a { color: #ffffff; font-weight: 600; text-decoration: none; }
+header a {
+    color: #ffffff;
+    font-weight: 600;
+    text-decoration: none;
+}
 
-header a:hover { text-decoration: underline; }
+header a:hover {
+    text-decoration: underline;
+}
 
 .card-container {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(220px, 1fr));
-  gap: 1.25rem;
-  padding: 16px;
-  border-radius: var(--radius);
-  background: rgba(255 ,255,255,0.6);
-  backdrop-filter: blur(2px);
-  border: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(220px, 1fr));
+    gap: 1.25rem;
+    padding: 16px;
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(2px);
+    border: 1px solid var(--border);
     overflow-y: scroll;
     max-height: 90vh;
     scrollbar-width: none;
 }
 
 .card {
-  border: 1px solid var(--border);
-  padding: 16px;
-  border-radius: var(--radius);
-  min-width: 15%;
-  min-height: 200px;
-  background: var(--surface);
-  box-shadow: var(--shadow-md);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-radius: var(--radius);
+    min-width: 15%;
+    min-height: 200px;
+    background: var(--surface);
+    box-shadow: var(--shadow-md);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 
-.card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
 
 .card-title {
     font-size: 1.5rem;
@@ -121,221 +88,115 @@ header a:hover { text-decoration: underline; }
 }
 
 .card-image {
-  border: 1px solid var(--border);
-  height: 15em;
-  width: 100%;
-  border-radius: 8px;
-  object-fit: scale-down;
-  display: block;
+    border: 1px solid var(--border);
+    height: 15em;
+    width: 100%;
+    border-radius: 8px;
+    object-fit: scale-down;
+    display: block;
 }
 
-.pet-btn { width: 100%; height: 2.5em; }
+.pet-btn {
+    width: 100%;
+    height: 2.5em;
+}
 
 .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0.78rem 1.1rem;
-  text-align: center;
-  background: linear-gradient(180deg, var(--accent-2), var(--accent));
-  color: #fff;
-  font-weight: 600;
-  border-radius: 999px; /* pill */
-  font-size: 1rem;
-  font-family: var(--font-sans);
-  text-decoration: none;
-  border: 1px solid rgba(0,0,0,0.04);
-  box-shadow: 0 6px 14px rgba(139, 92, 246, 0.35);
-  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
-  cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0.78rem 1.1rem;
+    text-align: center;
+    background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    color: #fff;
+    font-weight: 600;
+    border-radius: 999px; /* pill */
+    font-size: 1rem;
+    font-family: var(--font-sans);
+    text-decoration: none;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    box-shadow: 0 6px 14px rgba(139, 92, 246, 0.35);
+    transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
 }
 
-.btn:hover { background: linear-gradient(180deg, var(--accent-3), var(--accent-2)); transform: translateY(-1px); }
+.btn:hover {
+    background: linear-gradient(180deg, var(--accent-3), var(--accent-2));
+    transform: translateY(-1px);
+}
 
-.btn:active { transform: scale(0.97); }
+.btn:active {
+    transform: scale(0.97);
+}
 
-.btn:focus { outline: none; box-shadow: 0 0 0 6px rgba(167, 139, 250, 0.28); }
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 6px rgba(167, 139, 250, 0.28);
+}
 
-.btn:visited { color: white; }
+.btn:visited {
+    color: white;
+}
 
 .btn.disabled,
-.btn[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
+.btn[aria-disabled="true"] {
+    opacity: 0.5;
+    pointer-events: none;
+}
 
 /* Login form styling (unchanged structurally, styled with theme) */
 #login-form-container {
-  max-width: 420px;
-  margin: 18px auto 28px auto;
-  padding: 0 12px;
+    max-width: 420px;
+    margin: 18px auto 28px auto;
+    padding: 0 12px;
 }
 
 #login-form {
-  display: grid;
-  gap: 10px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  box-shadow: var(--shadow-md);
+    display: grid;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow-md);
 }
 
-#login-form label { font-size: 0.95rem; color: var(--ink-700); }
+#login-form label {
+    font-size: 0.95rem;
+    color: var(--ink-700);
+}
 
 #login-form input[type="email"],
 #login-form input[type="password"] {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb; /* gray-200 */
-  background: #f9fafb;       /* gray-50 */
-  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb; /* gray-200 */
+    background: #f9fafb; /* gray-50 */
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 #login-form input:focus {
-  outline: none;
-  border-color: #a5b4fc;     /* indigo-300 */
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(165, 180, 252, 0.35);
+    outline: none;
+    border-color: #a5b4fc; /* indigo-300 */
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(165, 180, 252, 0.35);
 }
 
-#login-button { margin-top: 6px; }
+#login-button {
+    margin-top: 6px;
+}
 
 /* Simple typographic tweaks */
-h1, h2, h3 { color: #0f172a; letter-spacing: 0.2px; }
-
-p { color: #334155; }
-
-/*
-  PET PAGE LAYOUT
-  Three columns: chat | hero | leaderboard
-  Uses CSS Grid to center content with dominant middle column.
-*/
-.pet-container {
-  display: grid;
-  /*grid-template-columns: minmax(260px, 600px) minmax(520px, 1fr) minmax(260px, 400px);*/
-    grid-template-columns: 1fr 3fr 1fr;
-  gap: 20px;
-  align-items: center;       /* vertical start per grid cell */
-  justify-content: center;  /* center the entire grid in main */
-  justify-items: center;    /* center children horizontally in cells */
-  width: 80%;
-    height: 100%;
-    margin: auto;
+h1, h2, h3 {
+    color: #0f172a;
+    letter-spacing: 0.2px;
 }
 
-/* Center column wrapper */
-.pet-center { display: grid; grid-template-rows: auto 1fr; gap: 12px; width: 70%; }
-
-.pet-counter { text-align: center; }
-
-.pet-counter-title {
-    color: whitesmoke;
-  font-weight: 700;
-  font-size: clamp(1.6rem, 1.2rem + 2.2vw, 2.4rem);
-  letter-spacing: 0.3px;
-  /*text-shadow: 0 1px 0 rgba(255,255,255,0.6);*/
+p {
+    color: #334155;
 }
-
-.pet-counter-sub { color: #475569; margin-top: 4px; }
-
-.pet-image-card { padding: 0; }
-
-.pet-hero-image {
-  width: 100%;
-  height: 60vh;              /* dominant visual */
-  max-height: 720px;
-  object-fit: contain;       /* show the pet fully */
-  border-radius: 18px;       /* soft rounded corners */
-  display: block;
-  margin: 0 auto;
-  filter: drop-shadow(0 18px 44px rgba(16, 42, 67, 0.22));
-    user-select: none;
-  animation: floaty 8s ease-in-out infinite;
-}
-
-.pet-hero-image:hover {
-    cursor: grab;
-}
-
-.pet-image-wrapper {
-    transition: transform 0.18s ease;
-}
-
-.pet-image-wrapper:active {
-    cursor: grabbing;
-    transform: scale(0.87);
-    animation-play-state: paused;
-}
-
-.pet-hero-image:active {
-    cursor: grabbing;
-}
-
-/* Chat: large, scrollable, non-leaky */
-#chat-box {
-    border: 3px solid var(--dark-purple-bg);
-    border-radius: var(--container-border-radius);
-    height: 60%;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    background-color: var(--dark-purple-bg);
-    box-shadow: 0px 8px 8px rgba(0, 0, 0, 0.75);
-    overflow: hidden;
-}
-
-#chat-box .chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px;
-    margin: 6px;
-  background: var(--surface);
-}
-
-/* Chat bubbles (generic selectors so no JS required) */
-#chat-box .chat-messages .msg {
-    max-width: 86%;
-    padding: 10px 12px;
-    border-radius: 16px;
-    margin: 6px 0;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-}
-#chat-box .chat-messages .me { background: var(--chat-right); margin-left: auto; }
-#chat-box .chat-messages .them { background: var(--chat-left); margin-right: auto; }
-
-#chat-box .chat-input-row { display: flex; gap: 10px; }
-
-#chat-box #chat-input {
-  flex: 1; padding: 12px 14px; border-radius: 999px; border: 1px solid #e5e7eb; background: #f9fafb;
-}
-
-/* Keep chat button compact */
-#chat-box .btn { width: auto; max-width: none; margin: 0; white-space: nowrap; padding-inline: 16px; }
-
-/* Leaderboard */
-/*#leaderboard {*/
-/*    display: flex;*/
-/*    flex-direction: column;*/
-/*    align-items: center;*/
-/*    justify-content: center;*/
-/*    width: 100%;*/
-/*}*/
-/*#leaderboard .leaderboard-table {*/
-/*    width: 80%;*/
-/*    border-collapse: separate; border-spacing: 0;*/
-/*    overflow: hidden;*/
-/*    border: 1px solid var(--border);*/
-/*    border-radius: var(--radius-sm);*/
-/*    background: var(--surface);*/
-/*}*/
-/*#leaderboard .leaderboard-table th,*/
-/*#leaderboard .leaderboard-table td { padding: 10px 12px; text-align: center; font-size: 0.95rem; color: var(--ink-700); }*/
-/*#leaderboard .leaderboard-table thead th { background: #eef2ff; color: #3730a3; position: sticky; top: 0; }*/
-/*#leaderboard .leaderboard-table tbody tr { background: #fff; }*/
-/*#leaderboard .leaderboard-table tbody tr:nth-child(odd) { background: var(--accent-5); }*/
-/*#leaderboard .leaderboard-table tbody tr:hover { background: #f5f7ff; }*/
 
 /* Small screens: tighten gaps a bit */
 @media (max-width: 480px) {
@@ -343,6 +204,7 @@ p { color: #334155; }
         gap: 0.9rem;
         padding: 12px;
     }
+
     .card {
         padding: 12px;
     }
@@ -350,23 +212,7 @@ p { color: #334155; }
 
 /* Medium-down responsive stacking for the pet page */
 @media (max-width: 960px) {
-  .pet-container { grid-template-columns: 1fr; }
-  .pet-hero-image { height: 45vh; }
-  #chat-box { min-height: 40vh; }
-  main { width: 94%; }
-}
-
-/* Animations */
-@keyframes floaty {
-    0%, 100% { transform: translateY(0px);  }
-    50% { transform: translateY(-6px); }
-}
-@keyframes count-bump { 0% { transform: scale(1); } 35% { transform: scale(1.08); } 100% { transform: scale(1); } }
-
-.count-bump { animation: count-bump 320ms ease-out; }
-
-#pet-count {
-    display: inline-block;
-    font-weight: 700;
-    transition: transform 0.15s ease;
+    main {
+        width: 94%;
+    }
 }

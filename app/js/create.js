@@ -7,9 +7,9 @@ document.addEventListener("DOMContentLoaded", (event) => {
 });
 
 const createForm = document.getElementById('new-pet-form')
-
-
 const imageInput = document.getElementById('pet-image-input')
+const processingPopup = document.getElementById('processing-popup')
+
 imageInput.addEventListener('change', displayImagePreview)
 
 function displayImagePreview() {
@@ -25,7 +25,6 @@ function displayImagePreview() {
 	reader.readAsDataURL(file);
 }
 
-const processingPopup = document.getElementById('processing-popup')
 
 createForm.addEventListener('submit', e => {
     e.preventDefault()

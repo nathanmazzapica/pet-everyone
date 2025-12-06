@@ -15,7 +15,7 @@ var (
 	errInvalidMediaType = fmt.Errorf("invalid media type")
 )
 
-// CreateNewPet creates a new pet and returns its ID
+// CreateNewPet creates a new pet entry in the database with the given name and image. Returns the pet ID or an error.
 func (app *Config) CreateNewPet(name string, img multipart.File, header *multipart.FileHeader) (string, error) {
 	// Stage 1 : Validate image
 	mediaType, _, err := mime.ParseMediaType(header.Header.Get("Content-Type"))
