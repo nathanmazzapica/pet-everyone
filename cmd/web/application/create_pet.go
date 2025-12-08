@@ -73,11 +73,7 @@ func (app *Config) processImage(img multipart.File, ext string, outputPath strin
 
 	_, err = cmd.CombinedOutput()
 	if err != nil {
-		fmt.Errorf("failed to process image: %s", err)
-	}
-
-	if err != nil {
-		return err
+		return fmt.Errorf("failed to process image: %s", err)
 	}
 
 	return nil
