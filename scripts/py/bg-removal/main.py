@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+from sympy.utilities.decorator import deprecated
 from withoutbg import WithoutBG
 from typing import Union
 import sys
@@ -7,51 +7,31 @@ import sys
 def printerr(v) -> None:
     print(v, file=sys.stderr)
 
-def trim_ext(target: str) -> str:
-    parts = target.split(".")
-    if len(parts) != 2 or (parts[0] == "" or parts[1] == ""):
-        raise ValueError(f"invalid input string:\n{target}")
-    return parts[0]
-
-def process(target) -> Union[str, None]:
+def process(target, output_path):
     """process removes the background of the target image.
-    Returns output_file_name: str if successful
-    otherwise, returns None"""
-    trimmed_target = ""
-    try:
-        trimmed_target = trim_ext(target)
-    except ValueError as e:
-        printerr(f"error processing target file:{e}")
-        return None
-
-    output_file_name = f"{trimmed_target}-trans.png"
+    :param target: the target image file path
+    :param output_path: the output path"""
 
     bg_remover = WithoutBG.opensource()
     result = bg_remover.remove_background(target)
 
-    try:
-        result.save(output_file_name)
-    except ValueError as ve:
-        printerr(ve)
-        return None
-    except OSError as ose:
-        printerr(ose)
-        return None
+    result.save(output_path)
 
-    return output_file_name
 
 if __name__ == "__main__":
     num_args = len(sys.argv)
 
-    if num_args != 2:
-        printerr("invalid number of args")
+    if num_args != 3:
+        printerr(f"invalid number of args: {num_args-1}, expected 2")
         sys.exit(1)   
 
     input_file = sys.argv[1]
+    outputh_path = sys.argv[2]
 
-    res = process(input_file)
-
-    if res is None:
+    try:
+        process(input_file, outputh_path)
+    except Exception as e:
+        printerr(f"error processing file:{e}")
         sys.exit(1)
 
-    print(res)
+    sys.exit(0)
