@@ -18,15 +18,15 @@ func (app *Config) EnsureAssetsDir() error {
 	return nil
 }
 
-func GetAssetPath(mediaType string) string {
+func GenerateAssetPath() string {
 	base := make([]byte, 32)
 	_, err := rand.Read(base)
 	if err != nil {
-		panic("failed to generate random bytes")
+		panic("failed to generate random bytes, you might be on an old version of Go or Linux incompatible with rand.Read")
 	}
 	id := base64.RawURLEncoding.EncodeToString(base)
-	ext := MediaTypeToExtension(mediaType)
-	return fmt.Sprintf("%s%s", id, ext)
+	// Output file will always be png because of bg-removal
+	return fmt.Sprintf("%s.png", id)
 }
 
 func (app *Config) GetAssetDiskPath(assetPath string) (string, error) {

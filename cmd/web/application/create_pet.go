@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"pet-everyone/internal/db/models"
-	"strings"
 )
 
 var (
@@ -30,40 +29,19 @@ func (app *Config) CreateNewPet(name string, img multipart.File, header *multipa
 	ext := MediaTypeToExtension(mediaType)
 
 	// Stage 2 : Process image
-	processedImg, err := app.processImage(img, ext)
-	if err != nil {
-		return "", err
-	}
-
-	defer os.Remove(processedImg.Name())
-	defer processedImg.Close()
-
-	// Stage 3 : Save processed image to disk
-	// TEMPORARY!!!! WILL BE REPLACED WITH S3 LATER
-
-	assetPath := GetAssetPath(mediaType)
+	assetPath := GenerateAssetPath()
 	assetDiskPath, err := app.GetAssetDiskPath(assetPath)
-
 	if err != nil {
 		return "", err
 	}
 
-	// #nosec G304 -- assetDiskPath is server-generated and sanitized in getAssetDiskPath
-	dst, err := os.Create(assetDiskPath)
+	err = app.processImage(img, ext, assetDiskPath)
 	if err != nil {
 		return "", err
 	}
-	defer dst.Close()
-
-	if _, err := io.Copy(dst, processedImg); err != nil {
-		return "", err
-	}
-
-	app.logger.Info("Image saved to disk", "path", assetDiskPath)
-
-	imageURL := app.GetAssetURL(assetPath)
 
 	// Stage 4 : Save pet to database
+	imageURL := app.GetAssetURL(assetPath)
 
 	pet, err := app.createPetInDatabase(name, imageURL)
 	if err != nil {
@@ -73,11 +51,11 @@ func (app *Config) CreateNewPet(name string, img multipart.File, header *multipa
 	return pet.PetID, nil
 }
 
-func (app *Config) processImage(img multipart.File, ext string) (*os.File, error) {
+func (app *Config) processImage(img multipart.File, ext string, outputPath string) error {
 	ptrn := fmt.Sprintf("upload-*%s", ext)
 	tmpFile, err := os.CreateTemp("", ptrn)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer tmpFile.Close()
 	defer os.Remove(tmpFile.Name())
@@ -85,27 +63,24 @@ func (app *Config) processImage(img multipart.File, ext string) (*os.File, error
 	app.logger.Info("Processing image", "tmpFile", tmpFile.Name())
 
 	if _, err := io.Copy(tmpFile, img); err != nil {
-		return nil, err
+		return err
 	}
 
 	pythonExecutable := "./scripts/py/.venv/bin/python"
 	removeBGScriptPath := "./scripts/py/bg-removal/main.py"
 
-	cmd := exec.Command(pythonExecutable, removeBGScriptPath, tmpFile.Name())
+	cmd := exec.Command(pythonExecutable, removeBGScriptPath, tmpFile.Name(), outputPath)
 
-	out, err := cmd.CombinedOutput()
+	_, err = cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("failed to process image: %s", err)
+		fmt.Errorf("failed to process image: %s", err)
 	}
 
-	outputPath := strings.TrimSpace(string(out))
-
-	processedImg, err := os.Open(outputPath)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return processedImg, nil
+	return nil
 }
 
 func (app *Config) createPetInDatabase(name string, imageURL string) (*models.Pet, error) {
