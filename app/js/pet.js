@@ -1,160 +1,178 @@
-// ignoreQueue is used to keep optimistic rendering from duplicating clicks
-// I am choosing to do this over server-side tracking of command ownership because it's simpler, and the client isn't authoritative anyway. This is only for rendering purposes
-let ignoreQueue = 0;
+// Ignore queue is used to keep optimistic rendering from duplicating clicks
+let optimisticIgnoreCount = 0;
+let socket = null;
 
-let ws = new WebSocket(`ws://localhost:8082/pet/${pet_id}/ws`)
-
-if (ws) {
-  ws.onopen = () => {
-	  console.log("Connected to websocket")
-  };
-
-  ws.onmessage = (e) => {
-	  console.log(e.data);
-      let event;
-
-      try {
-        event = JSON.parse(e.data);
-      } catch(exception) {
-          console.error(`Invalid JSON event from server: ${e.data}`)
-          return
-      }
-
-	  console.table(event);
-	  const eventType = event.type;
-	  switch (eventType) {
-		  case "pet":
-			  if (ignoreQueue > 0) {
-				  ignoreQueue--;
-				  return;
-			  }
-			  increment()
-			  break;
-		  case "petcount":
-			  setCount(Number(event.data));
-			  break;
-		  case "chat":
-			  const msgData = event.data;
-			  appendChatMessage(msgData.author, msgData.msg);
-			  break;
-		  default:
-			  console.log("Unknown message type");
-	  }
-  };
-
-  ws.onerror = (e) => {
-    // TODO: handle error
-  };
-  ws.onclose = () => {
-    // TODO: handle close
-  };
-}
-
-// Counter logic (local fallback)
 const countEl = document.getElementById('pet-count');
 const personalCountEl = document.getElementById('user-pet-count');
-const petBtn = document.getElementById('pet-container');
-
-let count = 1000;
-function getCount() {
-  return count;
-}
-function setCount(n) {
-	count = n;
-	updateUI();
-}
-
-function updateUI() {
-	countEl.innerText = getCount().toLocaleString();
-	personalCountEl.innerText = getCount().toLocaleString();
-}
-
-function increment() {
-  // TODO: implement local increment logic and optionally send to server
-	setCount(getCount() + 1);
-}
-
-// Pet button logic
-
-// petCommand is always the same, so we declare it once. no memory wasting here.
-const petCommand = {
-	"type": "pet",
-	"data": null
-}
-
-function renderOptimistic() {
-	increment();
-	ignoreQueue++;
-}
-
-function pet() {
-	countEl.classList.add('count-bump');
-	setTimeout(() => countEl.classList.remove('count-bump'), 320);
-	renderOptimistic();
-	ws.send(JSON.stringify(petCommand))
-}
-
-if (petBtn) {
-  petBtn.addEventListener('click', pet);
-}
-
-// Chat UI
+const petContainer = document.getElementById('pet-container');
 const chatMessages = document.getElementById('chat-message-container');
 const chatInput = document.getElementById('chat-input');
 const chatSend = document.getElementById('chat-send');
 
+let globalCount = 1000;
+
+function getCount() {
+	return globalCount;
+}
+
+function setCount(n) {
+	globalCount = n;
+	updateCountUI();
+}
+
+function updateCountUI() {
+	if (countEl) countEl.innerText = getCount().toLocaleString();
+	if (personalCountEl) personalCountEl.innerText = getCount().toLocaleString();
+}
+
+function increment() {
+	// TODO: implement local increment logic and optionally send to server
+	setCount(getCount() + 1);
+}
+
+// Utility: safe JSON parse
+function safeParseJSON(text) {
+	try {
+		return JSON.parse(text);
+	} catch (err) {
+		console.error(`Invalid JSON event from server: ${text}`);
+		return null;
+	}
+}
+
+// WEBSOCKET HELPERS
+
+function createWebSocket(petId) {
+	if (!petId) return null;
+	const url = `ws://localhost:8082/pet/${petId}/ws`;
+	const s = new WebSocket(url);
+
+	s.onopen = () => {
+		console.log('Connected to websocket');
+	};
+
+	s.onmessage = (e) => handleSocketMessage(e.data);
+
+	s.onerror = (e) => {
+		// TODO: handle error (log for now)
+		console.error('WebSocket error', e);
+	};
+
+	s.onclose = () => {
+		// TODO: handle close
+		console.log('WebSocket closed');
+	};
+
+	return s;
+}
+
+function handleSocketMessage(rawData) {
+	console.log(rawData);
+	const event = safeParseJSON(rawData);
+	if (!event) return;
+
+	console.table(event);
+	const eventType = event.type;
+	switch (eventType) {
+		case 'pet':
+			if (optimisticIgnoreCount > 0) {
+				optimisticIgnoreCount--;
+				return;
+			}
+			increment();
+			break;
+		case 'petcount':
+			setCount(Number(event.data));
+			break;
+		case 'chat': {
+			const msgData = event.data;
+			if (msgData) appendChatMessage(msgData.author, msgData.msg);
+			break;
+		}
+		default:
+			console.log('Unknown message type', eventType);
+	}
+}
+
+function sendSocketMessage(obj) {
+	if (!socket || socket.readyState !== WebSocket.OPEN) {
+		console.warn('WebSocket not ready, cannot send message', obj);
+		return;
+	}
+	socket.send(JSON.stringify(obj));
+}
+
+function renderOptimistic() {
+	increment();
+	optimisticIgnoreCount++;
+}
+
+const petCommand = {type: 'pet', data: null};
+function pet() {
+	if (countEl) {
+		countEl.classList.add('count-bump');
+		setTimeout(() => countEl.classList.remove('count-bump'), 320);
+	}
+	renderOptimistic();
+	sendSocketMessage(petCommand);
+}
+
+if (petContainer) {
+	petContainer.addEventListener('click', pet);
+}
+
+// Chat UI
 function appendChatMessage(user, msg) {
+	if (!chatMessages) return;
 	const msgEl = document.createElement('div');
 	msgEl.innerText = `${user}: ${msg}`;
-
 	msgEl.classList.add('message');
-	msgEl.classList.add((user === 'You' ? 'me' : 'them'));
-
+	msgEl.classList.add(user === 'You' ? 'me' : 'them');
 	chatMessages.appendChild(msgEl);
 }
 
 function sendChat() {
+	if (!chatInput) return;
 	const msg = chatInput.value;
-	// some crisp optimistic rendering
+	if (!msg) return;
+
+	// optimistic rendering
 	appendChatMessage('You', msg);
 
 	const msgData = {
-		"type": "chat",
-		"data": {
-			"msg": msg,
-			"author": "test"
+		type: 'chat',
+		data: {
+			msg: msg,
+			author: 'test'
 		}
-	}
-	ws.send(JSON.stringify(msgData));
+	};
+
+	sendSocketMessage(msgData);
 	chatInput.value = '';
 }
 
 if (chatSend) chatSend.addEventListener('click', sendChat);
 if (chatInput) {
-  chatInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      sendChat();
-    }
-  });
+	chatInput.addEventListener('keydown', (e) => {
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			sendChat();
+		}
+	});
 }
 
-
-
-function setGradientPosition(dog) {
-
-	if (dog == undefined) {
-		dog = "daisy"
-	}
-
-	const daisyRect = petBtn.getBoundingClientRect();
-
-	const centerX = daisyRect.left + daisyRect.width / 2;
-	const centerY = daisyRect.top + daisyRect.height / 2;
-
-	document.body.style.background = `
-        radial-gradient(circle at ${centerX}px ${centerY}px, var(--${dog}-gradient-start) 1%, var(--${dog}-gradient-end) 100%
-    `;
+// Visual: gradient based on pet image position
+function setGradientPosition(dog = 'daisy') {
+	if (!petContainer) return;
+	const rect = petContainer.getBoundingClientRect();
+	const centerX = rect.left + rect.width / 2;
+	const centerY = rect.top + rect.height / 2;
+	document.body.style.background = `radial-gradient(circle at ${centerX}px ${centerY}px, var(--${dog}-gradient-start) 1%, var(--${dog}-gradient-end) 100%`;
 }
 
+// Initialize
+updateCountUI();
 setGradientPosition();
+
+// Replace `pet_id` with the actual id variable/name in your scope.
+socket = createWebSocket(typeof pet_id !== 'undefined' ? pet_id : null);

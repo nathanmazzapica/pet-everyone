@@ -4,10 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
-	"mime"
-	"mime/multipart"
 	"os"
 	"pet-everyone/internal/db"
 	"pet-everyone/internal/db/models"
@@ -36,59 +33,8 @@ func NewConfig(pool *db.Client, registry *registry.HubRegistry, filepathRoot str
 		filepathRoot:      filepathRoot,
 		assetsRoot:        assetsRoot,
 		port:              port,
-		logger:            slog.New(slog.NewTextHandler(os.Stdout, nil)),
+		logger:            slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})),
 	}
-}
-
-func (app *Config) CreateNewPet(name string, img multipart.File, header *multipart.FileHeader) (*models.Pet, error) {
-
-	mediaType, _, err := mime.ParseMediaType(header.Header.Get("Content-Type"))
-	if err != nil {
-		return nil, err
-	}
-
-	if mediaType != "image/jpeg" && mediaType != "image/png" {
-		return nil, err
-	}
-
-	assetPath := GetAssetPath(mediaType)
-	assetDiskPath, err := app.GetAssetDiskPath(assetPath)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// #nosec G304 -- assetDiskPath is server-generated and sanitized in getAssetDiskPath
-	dst, err := os.Create(assetDiskPath)
-	if err != nil {
-		return nil, err
-	}
-	defer dst.Close()
-
-	if _, err := io.Copy(dst, img); err != nil {
-		return nil, err
-	}
-
-	imageURL := app.GetAssetURL(assetPath)
-
-	imageID, err := app.petModel.CreatePetImage(imageURL)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: Add user ID, right now for testing we're just nulling it out
-	pet := &models.Pet{
-		Name:        name,
-		ActiveImage: &imageID,
-		Visibility:  true,
-	}
-
-	err = app.petModel.CreatePet(pet)
-	if err != nil {
-		return nil, err
-	}
-
-	return pet, nil
 }
 
 func (app *Config) GetAllPets() (*dto.PetList, error) {

@@ -38,13 +38,13 @@ func handleCreatePet(app *application.Config) http.Handler {
 		}
 		defer file.Close()
 
-		pet, err := app.CreateNewPet(petName, file, header)
+		petID, err := app.CreateNewPet(petName, file, header)
 		if err != nil {
 			log.Println("error creating pet:", err)
 			app.RespondWithError(w, http.StatusInternalServerError, "Unable to create pet", err)
 			return
 		}
 
-		app.RespondWithJSON(w, http.StatusCreated, pet)
+		app.RespondWithJSON(w, http.StatusCreated, petID)
 	})
 }
