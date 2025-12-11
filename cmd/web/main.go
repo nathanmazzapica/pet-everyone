@@ -6,8 +6,9 @@ import (
 	"os"
 	"pet-everyone/cmd/web/application"
 	"pet-everyone/cmd/web/handler"
-	"pet-everyone/internal/db"
-	"pet-everyone/internal/db/models"
+	"pet-everyone/internal/data/cache"
+	"pet-everyone/internal/data/db"
+	"pet-everyone/internal/data/model"
 	"pet-everyone/internal/registry"
 	"time"
 
@@ -42,9 +43,12 @@ func main() {
 	defer client.Close()
 	log.Println("Connected to db")
 
+	rdbClient := cache.Connect(cache.LoadConfig())
+
 	app := application.NewConfig(
 		client,
-		registry.NewHubRegistry(&models.PetModel{DB: client.DB()}),
+		rdbClient,
+		registry.NewHubRegistry(&model.PetModel{DB: client.DB()}),
 		filepathRoot,
 		assetsRoot,
 		port,

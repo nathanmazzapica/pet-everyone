@@ -9,7 +9,6 @@ import (
 )
 
 func Routes(app *application.Config) *http.ServeMux {
-
 	authMiddleware := middleware.Auth(app)
 
 	log.Printf("filepathRoot: %s", app.GetFilepathRoot())

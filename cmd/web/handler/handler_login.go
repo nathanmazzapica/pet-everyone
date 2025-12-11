@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"pet-everyone/cmd/web/application"
 	"pet-everyone/internal/auth"
-	"pet-everyone/internal/db/models"
+	"pet-everyone/internal/data/model"
 	"time"
 )
 
@@ -27,7 +27,7 @@ func handleLogin(app *application.Config) http.Handler {
 		}
 
 		type response struct {
-			models.User
+			model.User
 			Token string `json:"token"`
 		}
 

@@ -2,7 +2,7 @@ package service
 
 import (
 	"log"
-	"pet-everyone/internal/db/models"
+	"pet-everyone/internal/data/model"
 	"sync"
 )
 
@@ -11,10 +11,10 @@ type PetService struct {
 	petCount uint64
 	mu       *sync.RWMutex
 	events   chan<- Event
-	db       *models.PetModel
+	db       *model.PetModel
 }
 
-func NewPetService(petID string, model *models.PetModel, out chan<- Event) *PetService {
+func NewPetService(petID string, model *model.PetModel, out chan<- Event) *PetService {
 	return &PetService{
 		petID:    petID,
 		petCount: 0, // will get from db later

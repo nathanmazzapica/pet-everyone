@@ -2,7 +2,7 @@ package registry
 
 import (
 	"log"
-	"pet-everyone/internal/db/models"
+	"pet-everyone/internal/data/model"
 	"pet-everyone/internal/service"
 	"pet-everyone/internal/transport"
 	"pet-everyone/internal/websocket"
@@ -12,10 +12,10 @@ import (
 type HubRegistry struct {
 	mu       sync.RWMutex
 	Hubs     map[string]*websocket.Hub
-	petModel *models.PetModel
+	petModel *model.PetModel
 }
 
-func NewHubRegistry(petModel *models.PetModel) *HubRegistry {
+func NewHubRegistry(petModel *model.PetModel) *HubRegistry {
 	return &HubRegistry{
 		mu:       sync.RWMutex{},
 		Hubs:     make(map[string]*websocket.Hub),

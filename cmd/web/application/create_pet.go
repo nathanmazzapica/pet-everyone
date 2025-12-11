@@ -7,7 +7,7 @@ import (
 	"mime/multipart"
 	"os"
 	"os/exec"
-	"pet-everyone/internal/db/models"
+	"pet-everyone/internal/data/model"
 )
 
 var (
@@ -79,14 +79,14 @@ func (app *Config) processImage(img multipart.File, ext string, outputPath strin
 	return nil
 }
 
-func (app *Config) createPetInDatabase(name string, imageURL string) (*models.Pet, error) {
+func (app *Config) createPetInDatabase(name string, imageURL string) (*model.Pet, error) {
 	imageID, err := app.petModel.CreatePetImage(imageURL)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO: Add user ID, right now for testing we're just nulling it out'
-	pet := &models.Pet{
+	pet := &model.Pet{
 		Name:        name,
 		ActiveImage: &imageID,
 		Visibility:  true,
