@@ -44,7 +44,8 @@ function safeParseJSON(text) {
 
 function createWebSocket(petId) {
 	if (!petId) return null;
-	const url = `ws://localhost:8082/pet/${petId}/ws`;
+	const token = localStorage.getItem('token');
+	const url = `ws://localhost:8082/pet/${petId}/ws?token=${token}`;
 	const s = new WebSocket(url);
 
 	s.onopen = () => {

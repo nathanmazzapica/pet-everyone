@@ -104,6 +104,15 @@ func (app *Config) Signup(email, password string) error {
 	return nil
 }
 
+func (app *Config) GetUserIDFromToken(token string) (string, error) {
+	id, err := app.SessionTokenModel().GetUserID(token)
+	if err != nil {
+		app.logger.Error("failed to get user id from token", "err", err)
+		return "", err
+	}
+	return id, nil
+}
+
 func (app *Config) Logger() *slog.Logger                        { return app.logger }
 func (app *Config) PetModel() *model.PetModel                   { return app.petModel }
 func (app *Config) UserModel() *model.UserModel                 { return app.userModel }

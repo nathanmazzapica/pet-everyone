@@ -1,7 +1,6 @@
 package model
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"time"
@@ -98,6 +97,12 @@ func (p *PetModel) GetPetCount(id *string) (int, error) {
 		return -1, err
 	}
 	return count, err
+}
+
+func (p *PetModel) UpdatePetCount(petID string, userID string, count int) error {
+	query := `INSERT INTO UserPetsClickCount (pet_id, user_id, click_count) VALUES ($1, $2, $3) ON CONFLICT (pet_id, user_id) DO UPDATE SET click_count = UserPetsClickCount.click_count + $3;`
+	_, err := p.DB.Exec(query, petID, userID, count)
+	return err
 }
 
 func (p *PetModel) CreatePet(pet *Pet) error {

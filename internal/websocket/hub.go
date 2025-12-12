@@ -46,7 +46,7 @@ func (h *Hub) Run() {
 
 			h.commands <- dat
 
-			log.Printf("[HUB %s]: REGISTERED NEW CLIENT", h.id)
+			log.Printf("[HUB %s]: REGISTERED NEW CLIENT {%s}", h.id, client.UserID)
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)

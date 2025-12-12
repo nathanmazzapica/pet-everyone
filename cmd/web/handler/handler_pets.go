@@ -42,9 +42,23 @@ func handlePetConnect(app *application.Config) http.Handler {
 func servePetWebsocket(app *application.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		petID := r.PathValue("pet_id")
+		url := r.URL
+		query := url.Query()
+
+		token := query.Get("token")
+		if token == "" {
+			app.RespondWithError(w, 400, "missing user_id query param", nil)
+			return
+		}
+
+		userID, err := app.GetUserIDFromToken(token)
+		if err != nil {
+			app.RespondWithError(w, 401, "invalid token", err)
+			return
+		}
 
 		hub, _ := app.GetRegistry().GetOrCreateHub(petID)
-		websocket.ServeWs(hub, w, r)
+		websocket.ServeWs(hub, userID, w, r)
 		app.Logger().Info("Websocket connection established", "pet_id", petID)
 	})
 }
