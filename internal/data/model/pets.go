@@ -50,20 +50,10 @@ func (p *PetModel) GetAll() ([]Pet, error) {
 func (p *PetModel) Get(id string) (*Pet, error) {
 	var pet Pet
 
-	pet, hit, err := checkCache(id, p.Cache)
-
-	if hit {
-		fmt.Println("[CACHE] :", "hit")
-		return &pet, err
-	} else {
-		fmt.Println("[CACHE] :", "pet_id: ", id, " not found in cache", "error:", err)
-		fmt.Println("fetching from db")
-	}
-
 	query := `SELECT * FROM pet WHERE pet_id = $1;`
 	row := p.DB.QueryRow(query, id)
 
-	err = row.Scan(
+	err := row.Scan(
 		&pet.PetID,
 		&pet.Name,
 		&pet.CreatedAt,
@@ -77,25 +67,11 @@ func (p *PetModel) Get(id string) (*Pet, error) {
 		return nil, err
 	}
 
-	err = storeInCache(id, &pet, p.Cache)
 	if err != nil {
 		fmt.Println("failed to store in cache")
 	}
 
 	return &pet, err
-}
-
-// pet cache key -> (pet:id):w
-func checkCache(id string, client *redis.Client) (Pet, bool, error) {
-	var pet Pet
-	err := client.HGetAll(context.Background(), "pet:"+id).Scan(&pet)
-	hit := pet != (Pet{})
-
-	return pet, hit, err
-}
-
-func storeInCache(id string, pet *Pet, client *redis.Client) error {
-	return client.HSet(context.Background(), "pet:"+id, pet).Err()
 }
 
 func (p *PetModel) GetPetImage(id *string) (string, error) {
