@@ -10,6 +10,7 @@ const chatInput = document.getElementById('chat-input');
 const chatSend = document.getElementById('chat-send');
 
 let globalCount = 1000;
+let localCount = 0;
 
 function getCount() {
 	return globalCount;
@@ -20,13 +21,21 @@ function setCount(n) {
 	updateCountUI();
 }
 
+function getLocalCount() {
+	return localCount;
+}
+
+function setLocalCount(n) {
+	localCount = n;
+	updateCountUI();
+}
+
 function updateCountUI() {
 	if (countEl) countEl.innerText = getCount().toLocaleString();
-	if (personalCountEl) personalCountEl.innerText = getCount().toLocaleString();
+	if (personalCountEl) personalCountEl.innerText = getLocalCount().toLocaleString();
 }
 
 function increment() {
-	// TODO: implement local increment logic and optionally send to server
 	setCount(getCount() + 1);
 }
 
@@ -114,6 +123,7 @@ function pet() {
 		countEl.classList.add('count-bump');
 		setTimeout(() => countEl.classList.remove('count-bump'), 320);
 	}
+	setLocalCount(getLocalCount() + 1)
 	renderOptimistic();
 	sendSocketMessage(petCommand);
 }
