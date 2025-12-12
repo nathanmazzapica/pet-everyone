@@ -48,6 +48,10 @@ func (app *Config) GetAllPets() (*dto.PetList, error) {
 	petDTOs := make([]dto.Pet, len(pets))
 	for i, pet := range pets {
 		dto := dto.Pet{PetID: pet.PetID, PetName: pet.Name}
+		dto.PetCount, err = app.petModel.GetPetCount(&pet.PetID)
+		if err != nil {
+			dto.PetCount = 0
+		}
 		dto.ImageURL = app.GetPetImage(pet.ActiveImage)
 		petDTOs[i] = dto
 	}

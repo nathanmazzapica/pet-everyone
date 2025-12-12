@@ -9,7 +9,7 @@
                 <div class="card pet-card">
                     <h3 class="card-title">{{ .PetName }}</h3>
                     <img class="card-image" src="{{ .ImageURL }}"></img>
-                    <p>Total pets: 1,000,000</p>
+                    <p>Total pets: {{ .PetCount }}</p>
                     <p>Active petters: 10</p>
                     <a class=btn href="/pet/{{ .PetID }}">Pet</a>
                 </div>
