@@ -51,10 +51,14 @@ CREATE TABLE UserPetsClickCount
     FOREIGN KEY (user_id) REFERENCES RegisteredUser (user_id),
     FOREIGN KEY (guest_id) REFERENCES Visitor (guest_id),
 
+    CONSTRAINT user_or_guest_present
     CHECK (
         (user_id IS NOT NULL AND guest_id IS NULL) OR
         (user_id IS NULL AND guest_id IS NOT NULL)
-    )
+    ),
+
+    CONSTRAINT pet_id_user_id_unique
+    UNIQUE (pet_id, user_id)
 );
 
 CREATE UNIQUE INDEX uniq_user_pet
