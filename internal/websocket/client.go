@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"log"
+	"pet-everyone/internal/transport"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -52,7 +53,8 @@ func (c *Client) readPump() {
 			break
 		}
 		log.Printf("recv: %s\n", message)
-		c.hub.commands <- message
+		env := transport.Envelope{Sender: c.UserID, Data: message}
+		c.hub.commands <- env
 	}
 }
 

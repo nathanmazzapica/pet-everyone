@@ -8,6 +8,10 @@ import (
 
 // router takes in commands and routes them to the appropriate service
 
+type Envelope struct {
+	Sender string
+	Data   []byte
+}
 type Command struct {
 	Type string `json:"type"`
 
@@ -17,14 +21,14 @@ type Command struct {
 }
 
 type Router struct {
-	in          chan []byte
+	in          chan Envelope
 	petService  *service.PetService
 	chatService *service.ChatService
 }
 
 func NewRouter(petService *service.PetService, chatService *service.ChatService) *Router {
 	return &Router{
-		in:          make(chan []byte, 1024),
+		in:          make(chan Envelope, 2048),
 		petService:  petService,
 		chatService: chatService,
 	}
@@ -32,7 +36,8 @@ func NewRouter(petService *service.PetService, chatService *service.ChatService)
 
 func (r *Router) Route() {
 	for {
-		dat, ok := <-r.in
+		env, ok := <-r.in
+		dat := env.Data
 		if !ok {
 			// Channel is closed, break loop
 			return
@@ -47,7 +52,8 @@ func (r *Router) Route() {
 
 		switch cmd.Type {
 		case "pet":
-			r.petService.IncrementPetCount()
+			user := env.Sender
+			r.petService.IncrementPetCount(user)
 		case "petcount":
 			r.petService.BroadcastPetCount()
 		case "chat":
@@ -71,6 +77,6 @@ func (r *Router) Route() {
 	}
 }
 
-func (r *Router) In() chan []byte {
+func (r *Router) In() chan Envelope {
 	return r.in
 }

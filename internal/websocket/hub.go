@@ -3,6 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"log"
+	"pet-everyone/internal/transport"
 )
 
 type Hub struct {
@@ -13,10 +14,10 @@ type Hub struct {
 	register   chan *Client
 	unregister chan *Client
 
-	commands chan<- []byte
+	commands chan<- transport.Envelope
 }
 
-func NewHub(id string, cmds chan<- []byte) *Hub {
+func NewHub(id string, cmds chan<- transport.Envelope) *Hub {
 	return &Hub{
 		id:         id,
 		broadcast:  make(chan []byte),
@@ -44,7 +45,8 @@ func (h *Hub) Run() {
 				log.Println(err)
 			}
 
-			h.commands <- dat
+			env := transport.Envelope{Sender: "", Data: dat}
+			h.commands <- env
 
 			log.Printf("[HUB %s]: REGISTERED NEW CLIENT {%s}", h.id, client.UserID)
 		case client := <-h.unregister:
