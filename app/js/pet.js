@@ -50,15 +50,21 @@ function safeParseJSON(text) {
 }
 
 // WEBSOCKET HELPERS
-
 function createWebSocket(petId) {
 	if (!petId) return null;
+	// TODO: implement fallback for guest users
 	const token = localStorage.getItem('token');
 	const url = `ws://localhost:8082/pet/${petId}/ws?token=${token}`;
 	const s = new WebSocket(url);
 
 	s.onopen = () => {
 		console.log('Connected to websocket');
+		const petcountRequest = {
+			type: 'petcount',
+			data: null
+		};
+
+		sendSocketMessage(petcountRequest);
 	};
 
 	s.onmessage = (e) => handleSocketMessage(e.data);
@@ -154,6 +160,7 @@ function sendChat() {
 		type: 'chat',
 		data: {
 			msg: msg,
+			// TODO: authorship should be serverside
 			author: 'test'
 		}
 	};
@@ -172,7 +179,6 @@ if (chatInput) {
 	});
 }
 
-// Visual: gradient based on pet image position
 function setGradientPosition(dog = 'daisy') {
 	if (!petContainer) return;
 	const rect = petContainer.getBoundingClientRect();
@@ -185,5 +191,4 @@ function setGradientPosition(dog = 'daisy') {
 updateCountUI();
 setGradientPosition();
 
-// Replace `pet_id` with the actual id variable/name in your scope.
 socket = createWebSocket(typeof pet_id !== 'undefined' ? pet_id : null);
