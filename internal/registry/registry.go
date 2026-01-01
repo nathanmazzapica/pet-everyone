@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"context"
 	"log"
 	"pet-everyone/internal/data/model"
 	"pet-everyone/internal/service"
@@ -42,16 +43,26 @@ func (h *HubRegistry) GetOrCreateHub(id string) (*websocket.Hub, bool) {
 }
 
 func (h *HubRegistry) initializeHub(id string) *websocket.Hub {
+	ctx, cancel := context.WithCancel(context.Background())
 	serializer := transport.NewJSONSerializer()
 
-	petService := service.NewPetService(id, h.petModel, serializer.In())
+	petService := service.NewPetService(ctx, id, h.petModel, serializer.In())
 	chatService := service.NewChatService(serializer.In())
 
 	router := transport.NewRouter(petService, chatService)
 	go router.Route()
 
-	hub := websocket.NewHub(id, router.In())
+	hub := websocket.NewHub(id, router.In(), cancel)
 	serializer.Subscribe(hub.GetBroadcastChannel())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				h.RemoveHub(id)
+			}
+		}
+	}()
 
 	return hub
 }
