@@ -12,16 +12,15 @@ type Envelope struct {
 	Sender string
 	Data   []byte
 }
+
 type Command struct {
-	Type string `json:"type"`
-
-	// AuthorID string unused for now
-
+	Type string      `json:"type"`
 	Data interface{} `json:"data"`
 }
 
 type Router struct {
 	in          chan Envelope
+	events      chan Event
 	petService  *service.PetService
 	chatService *service.ChatService
 }
@@ -29,6 +28,7 @@ type Router struct {
 func NewRouter(petService *service.PetService, chatService *service.ChatService) *Router {
 	return &Router{
 		in:          make(chan Envelope, 2048),
+		events:      make(chan Event, 1024),
 		petService:  petService,
 		chatService: chatService,
 	}
@@ -52,10 +52,27 @@ func (r *Router) Route() {
 
 		switch cmd.Type {
 		case "pet":
-			user := env.Sender
-			r.petService.IncrementPetCount(user)
+			err := r.petService.IncrementPetCount(env.Sender)
+			if err != nil {
+				log.Println("error incrementing pet count:", err)
+				continue
+			}
+			// Broadcast to all - everyone sees the pet was petted
+			r.events <- Event{
+				Type:   "pet",
+				Data:   map[string]interface{}{"c": 1},
+				Target: TargetExcept(env.Sender),
+			}
+
 		case "petcount":
-			r.petService.BroadcastPetCount()
+			count := r.petService.BroadcastPetCount()
+			// Broadcast to all - sync full count
+			r.events <- Event{
+				Type:   "petcount",
+				Data:   count,
+				Target: TargetBroadcast,
+			}
+
 		case "chat":
 			msgData, ok := cmd.Data.(map[string]interface{})
 			if !ok {
@@ -69,7 +86,21 @@ func (r *Router) Route() {
 				continue
 			}
 
-			r.chatService.Send(msg)
+			chatMsg, err := r.chatService.ProcessMessage(msg, env.Sender)
+			if err != nil {
+				log.Println("error processing chat message:", err)
+				continue
+			}
+
+			// Broadcast to all except sender
+			r.events <- Event{
+				Type: "chat",
+				Data: map[string]interface{}{
+					"msg":    chatMsg.Msg,
+					"author": chatMsg.Author,
+				},
+				Target: TargetExcept(env.Sender),
+			}
 
 		default:
 			log.Println("unknown command:", cmd)
@@ -79,4 +110,8 @@ func (r *Router) Route() {
 
 func (r *Router) In() chan Envelope {
 	return r.in
+}
+
+func (r *Router) Events() <-chan Event {
+	return r.events
 }
