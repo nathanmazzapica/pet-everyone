@@ -1,5 +1,3 @@
-// Ignore queue is used to keep optimistic rendering from duplicating clicks
-let optimisticIgnoreCount = 0;
 let socket = null;
 
 const countEl = document.getElementById('pet-count');
@@ -35,7 +33,7 @@ function updateCountUI() {
 	if (personalCountEl) personalCountEl.innerText = getLocalCount().toLocaleString();
 }
 
-function increment() {
+function incrementCountUI() {
 	setCount(getCount() + 1);
 }
 
@@ -91,11 +89,7 @@ function handleSocketMessage(rawData) {
 	const eventType = event.type;
 	switch (eventType) {
 		case 'pet':
-			if (optimisticIgnoreCount > 0) {
-				optimisticIgnoreCount--;
-				return;
-			}
-			increment();
+			incrementCountUI();
 			break;
 		case 'petcount':
 			setCount(Number(event.data));
@@ -118,11 +112,6 @@ function sendSocketMessage(obj) {
 	socket.send(JSON.stringify(obj));
 }
 
-function renderOptimistic() {
-	increment();
-	optimisticIgnoreCount++;
-}
-
 const petCommand = {type: 'pet', data: null};
 function pet() {
 	if (countEl) {
@@ -130,7 +119,7 @@ function pet() {
 		setTimeout(() => countEl.classList.remove('count-bump'), 320);
 	}
 	setLocalCount(getLocalCount() + 1)
-	renderOptimistic();
+	incrementCountUI();
 	sendSocketMessage(petCommand);
 }
 
@@ -160,8 +149,6 @@ function sendChat() {
 		type: 'chat',
 		data: {
 			msg: msg,
-			// TODO: authorship should be serverside
-			author: 'test'
 		}
 	};
 
