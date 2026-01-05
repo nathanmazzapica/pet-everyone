@@ -18,26 +18,19 @@ type PetService struct {
 	dbQueue        map[string]uint64
 	pendingUpdates map[string]uint64
 	mu             *sync.RWMutex
-	events         chan<- Event
 	db             PetDatabase
 }
 
-func NewPetService(ctx context.Context, petID string, model PetDatabase, out chan<- Event) *PetService {
+func NewPetService(ctx context.Context, petID string, model PetDatabase) *PetService {
 	service := &PetService{
 		petID:    petID,
 		petCount: 0,
 		dbQueue:  make(map[string]uint64),
 		mu:       &sync.RWMutex{},
-		events:   out,
 		db:       model,
 	}
 	service.init(ctx)
 	return service
-}
-
-// petEvent is used to send pet count to websocket clients
-type petEvent struct {
-	Ack byte `json:"c"`
 }
 
 func (s *PetService) IncrementPetCount(userID string) error {
@@ -45,15 +38,11 @@ func (s *PetService) IncrementPetCount(userID string) error {
 	s.petCount++
 	s.dbQueue[userID]++
 	s.mu.Unlock()
-	petEvent := Event{Type: "pet", Data: petEvent{Ack: 1}}
-	s.events <- petEvent
 	return nil
 }
 
-func (s *PetService) BroadcastPetCount() {
-	count := s.GetPetCount()
-	petEvent := Event{Type: "petcount", Data: count}
-	s.events <- petEvent
+func (s *PetService) BroadcastPetCount() uint64 {
+	return s.GetPetCount()
 }
 
 func (s *PetService) GetPetCount() uint64 {
