@@ -4,12 +4,14 @@ import (
 	"context"
 	"log"
 	"pet-everyone/internal/transport"
+	"sync"
 	"time"
 )
 
 type Hub struct {
 	id        string // Hub ID = associated petID
 	clients   map[*Client]bool
+	mu        sync.RWMutex
 	broadcast chan []byte
 
 	register   chan *Client
@@ -29,6 +31,7 @@ func NewHub(id string, cmds chan<- transport.Envelope, cancel context.CancelFunc
 		register:      make(chan *Client),
 		unregister:    make(chan *Client),
 		clients:       make(map[*Client]bool),
+		mu:            sync.RWMutex{},
 		commands:      cmds,
 		cancel:        cancel,
 		shutdownDelay: shutdownDelay,
@@ -39,7 +42,10 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.register:
+			h.mu.Lock()
 			h.clients[client] = true
+			h.mu.Unlock()
+
 			log.Printf("[HUB %s]: REGISTERED NEW CLIENT {%s}", h.id, client.UserID)
 
 			// Cancel shutdown if a client reconnects
@@ -51,19 +57,22 @@ func (h *Hub) Run() {
 			}
 
 		case client := <-h.unregister:
+			h.mu.Lock()
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
 				log.Printf("[HUB %s]: DEREGISTERED CLIENT", h.id)
 
-				if len(h.clients) == 0 {
-					// Start shutdown timer instead of immediate shutdown
-					log.Printf("[HUB %s]: NO CLIENTS - scheduling shutdown in %v", h.id, h.shutdownDelay)
-					h.shutdownTimer = time.AfterFunc(h.shutdownDelay, func() {
-						log.Printf("[HUB %s]: SHUTDOWN TIMER EXPIRED - triggering shutdown", h.id)
-						h.cancel()
-					})
-				}
+			}
+			h.mu.Unlock()
+
+			if len(h.clients) == 0 {
+				// Start shutdown timer instead of immediate shutdown
+				log.Printf("[HUB %s]: NO CLIENTS - scheduling shutdown in %v", h.id, h.shutdownDelay)
+				h.shutdownTimer = time.AfterFunc(h.shutdownDelay, func() {
+					log.Printf("[HUB %s]: SHUTDOWN TIMER EXPIRED - triggering shutdown", h.id)
+					h.cancel()
+				})
 			}
 
 		case message := <-h.broadcast:
@@ -71,8 +80,7 @@ func (h *Hub) Run() {
 				select {
 				case client.send <- message:
 				default:
-					close(client.send)
-					delete(h.clients, client)
+					h.unregister <- client
 				}
 			}
 		}
@@ -102,6 +110,9 @@ func (h *Hub) Broadcast(message []byte) {
 }
 
 func (h *Hub) BroadcastExcept(message []byte, exceptUserID string) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
 	for client := range h.clients {
 		if client.UserID == exceptUserID {
 			continue
@@ -109,20 +120,21 @@ func (h *Hub) BroadcastExcept(message []byte, exceptUserID string) {
 		select {
 		case client.send <- message:
 		default:
-			close(client.send)
-			delete(h.clients, client)
+			h.unregister <- client
 		}
 	}
 }
 
 func (h *Hub) SendToUser(message []byte, userID string) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
 	for client := range h.clients {
 		if client.UserID == userID {
 			select {
 			case client.send <- message:
 			default:
-				close(client.send)
-				delete(h.clients, client)
+				h.unregister <- client
 			}
 			return
 		}
