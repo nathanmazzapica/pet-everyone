@@ -57,7 +57,7 @@ func (r *Router) Route() {
 				log.Println("error incrementing pet count:", err)
 				continue
 			}
-			// Broadcast to all - everyone sees the pet was petted
+			// Don't broadcast to sender, they already rendered their pet
 			r.events <- Event{
 				Type:   "pet",
 				Data:   map[string]interface{}{"c": 1},
