@@ -72,8 +72,16 @@ func (h *HubRegistry) initializeHub(id string) *websocket.Hub {
 
 	// Wire Router events to Serializer
 	go func() {
-		for event := range router.Events() {
-			serializer.In() <- event
+		for {
+			select {
+			case event, ok := <-router.Events():
+				if !ok {
+					return
+				}
+				serializer.In() <- event
+			case <-ctx.Done():
+				return
+			}
 		}
 	}()
 
