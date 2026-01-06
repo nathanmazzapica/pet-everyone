@@ -86,9 +86,8 @@ func (h *HubRegistry) initializeHub(id string) *websocket.Hub {
 	}()
 
 	go func() {
-		for range ctx.Done() {
-			h.RemoveHub(id)
-		}
+		<-ctx.Done()
+		h.RemoveHub(id)
 	}()
 
 	return hub
