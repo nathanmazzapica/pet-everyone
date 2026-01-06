@@ -80,7 +80,11 @@ func (h *Hub) Run() {
 				select {
 				case client.send <- message:
 				default:
-					h.unregister <- client
+					select {
+					case h.unregister <- client:
+					default:
+						log.Printf("[HUB %s]: failed to unregister client", h.id)
+					}
 				}
 			}
 		}
@@ -96,7 +100,11 @@ func (h *Hub) Clean() {
 
 	for client := range h.clients {
 		client.send <- []byte("shutdown")
-		h.unregister <- client
+		select {
+		case h.unregister <- client:
+		default:
+			log.Printf("[HUB %s]: failed to unregister client", h.id)
+		}
 	}
 	log.Printf("[HUB %s]: shutting down", h.id)
 }
@@ -120,7 +128,11 @@ func (h *Hub) BroadcastExcept(message []byte, exceptUserID string) {
 		select {
 		case client.send <- message:
 		default:
-			h.unregister <- client
+			select {
+			case h.unregister <- client:
+			default:
+				log.Printf("[HUB %s]: failed to unregister client", h.id)
+			}
 		}
 	}
 }
@@ -134,7 +146,11 @@ func (h *Hub) SendToUser(message []byte, userID string) {
 			select {
 			case client.send <- message:
 			default:
-				h.unregister <- client
+				select {
+				case h.unregister <- client:
+				default:
+					log.Printf("[HUB %s]: failed to unregister client", h.id)
+				}
 			}
 			return
 		}
