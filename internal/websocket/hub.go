@@ -64,7 +64,6 @@ func (h *Hub) Run() {
 				log.Printf("[HUB %s]: DEREGISTERED CLIENT", h.id)
 
 			}
-			h.mu.Unlock()
 
 			if len(h.clients) == 0 {
 				// Start shutdown timer instead of immediate shutdown
@@ -74,8 +73,10 @@ func (h *Hub) Run() {
 					h.cancel()
 				})
 			}
+			h.mu.Unlock()
 
 		case message := <-h.broadcast:
+			h.mu.RLock()
 			for client := range h.clients {
 				select {
 				case client.send <- message:
@@ -87,6 +88,7 @@ func (h *Hub) Run() {
 					}
 				}
 			}
+			h.mu.RUnlock()
 		}
 	}
 }
