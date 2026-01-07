@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"pet-everyone/internal/service"
@@ -34,76 +35,81 @@ func NewRouter(petService *service.PetService, chatService *service.ChatService)
 	}
 }
 
-func (r *Router) Route() {
+func (r *Router) Route(ctx context.Context) {
 	for {
-		env, ok := <-r.in
-		dat := env.Data
-		if !ok {
-			// Channel is closed, break loop
+		select {
+		case env, ok := <-r.in:
+			if !ok {
+				return
+			}
+
+			dat := env.Data
+
+			cmd := Command{}
+			err := json.Unmarshal(dat, &cmd)
+			if err != nil {
+				log.Println("error unmarshalling command:", err)
+				continue
+			}
+
+			switch cmd.Type {
+			case "pet":
+				err := r.petService.IncrementPetCount(env.Sender)
+				if err != nil {
+					log.Println("error incrementing pet count:", err)
+					continue
+				}
+				// Don't broadcast to sender, they already rendered their pet
+				r.events <- Event{
+					Type:   "pet",
+					Data:   map[string]interface{}{"c": 1},
+					Target: TargetExcept(env.Sender),
+				}
+
+			case "petcount":
+				count := r.petService.BroadcastPetCount()
+				// Broadcast to all - sync full count
+				r.events <- Event{
+					Type:   "petcount",
+					Data:   count,
+					Target: TargetBroadcast,
+				}
+
+			case "chat":
+				msgData, ok := cmd.Data.(map[string]interface{})
+				if !ok {
+					log.Println("error: chat command Data is not a map[string]interface{}", cmd.Data)
+					continue
+				}
+
+				msg, ok := msgData["msg"].(string)
+				if !ok {
+					log.Println("error: chat command Data is missing 'msg' field", cmd.Data)
+					continue
+				}
+
+				chatMsg, err := r.chatService.ProcessMessage(msg, env.Sender)
+				if err != nil {
+					log.Println("error processing chat message:", err)
+					continue
+				}
+
+				// Broadcast to all except sender
+				r.events <- Event{
+					Type: "chat",
+					Data: map[string]interface{}{
+						"msg":    chatMsg.Msg,
+						"author": chatMsg.Author,
+					},
+					Target: TargetExcept(env.Sender),
+				}
+
+			default:
+				log.Println("unknown command:", cmd)
+			}
+		case <-ctx.Done():
+			log.Println("router shutting down")
 			return
-		}
-
-		cmd := Command{}
-		err := json.Unmarshal(dat, &cmd)
-		if err != nil {
-			log.Println("error unmarshalling command:", err)
-			continue
-		}
-
-		switch cmd.Type {
-		case "pet":
-			err := r.petService.IncrementPetCount(env.Sender)
-			if err != nil {
-				log.Println("error incrementing pet count:", err)
-				continue
-			}
-			// Don't broadcast to sender, they already rendered their pet
-			r.events <- Event{
-				Type:   "pet",
-				Data:   map[string]interface{}{"c": 1},
-				Target: TargetExcept(env.Sender),
-			}
-
-		case "petcount":
-			count := r.petService.BroadcastPetCount()
-			// Broadcast to all - sync full count
-			r.events <- Event{
-				Type:   "petcount",
-				Data:   count,
-				Target: TargetBroadcast,
-			}
-
-		case "chat":
-			msgData, ok := cmd.Data.(map[string]interface{})
-			if !ok {
-				log.Println("error: chat command Data is not a map[string]interface{}", cmd.Data)
-				continue
-			}
-
-			msg, ok := msgData["msg"].(string)
-			if !ok {
-				log.Println("error: chat command Data is missing 'msg' field", cmd.Data)
-				continue
-			}
-
-			chatMsg, err := r.chatService.ProcessMessage(msg, env.Sender)
-			if err != nil {
-				log.Println("error processing chat message:", err)
-				continue
-			}
-
-			// Broadcast to all except sender
-			r.events <- Event{
-				Type: "chat",
-				Data: map[string]interface{}{
-					"msg":    chatMsg.Msg,
-					"author": chatMsg.Author,
-				},
-				Target: TargetExcept(env.Sender),
-			}
-
-		default:
-			log.Println("unknown command:", cmd)
 		}
 	}
 }

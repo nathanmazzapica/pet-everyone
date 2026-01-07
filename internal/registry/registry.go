@@ -61,7 +61,7 @@ func (h *HubRegistry) initializeHub(id string) *websocket.Hub {
 	chatService := service.NewChatService()
 
 	router := transport.NewRouter(petService, chatService)
-	go router.Route()
+	go router.Route(ctx)
 
 	// 30 second delay before shutting down after last client disconnects
 	// This prevents unnecessary hub recreation on page refreshes
