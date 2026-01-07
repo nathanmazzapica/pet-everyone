@@ -8,7 +8,7 @@ import (
 
 func TestFlushBuffer(t *testing.T) {
 	mock := &SaboteurDatabase{ShouldFail: true}
-	testService := NewPetService(context.Background(), "1", mock, nil)
+	testService := NewPetService(context.Background(), "1", mock)
 	for i := 0; i < 6000; i++ {
 		mockID := fmt.Sprintf("%d", i)
 		testService.dbQueue[mockID] = 1

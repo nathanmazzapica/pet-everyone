@@ -3,48 +3,28 @@ package transport
 import (
 	"encoding/json"
 	"log"
-	"pet-everyone/internal/service"
 )
 
-type Serializer interface {
-	Marshal(v interface{}) ([]byte, error)
-	Unmarshal(data []byte, v interface{}) error
-	Subscribe(ch chan []byte)
-	In() chan interface{}
-	readPump()
-	writePump()
+type HubBroadcaster interface {
+	Broadcast(message []byte)
+	BroadcastExcept(message []byte, exceptUserID string)
+	SendToUser(message []byte, userID string)
 }
 
 type JSONSerializer struct {
-	in         chan service.Event
-	out        chan envelope
-	subscriber chan<- []byte
+	in  chan Event
+	hub HubBroadcaster
 }
 
-type envelope struct {
-	recipient string
-	data      []byte
-}
-
-func NewJSONSerializer() *JSONSerializer {
+func NewJSONSerializer(hub HubBroadcaster) *JSONSerializer {
 	s := &JSONSerializer{
-		in:  make(chan service.Event, 1024),
-		out: make(chan envelope, 256),
+		in:  make(chan Event, 1024),
+		hub: hub,
 	}
 
 	go s.readPump()
-	go s.writePump()
 
 	return s
-}
-
-// Subscribe adds a channel to the list of subscribers
-func (s *JSONSerializer) Subscribe(ch chan []byte) {
-	if s.subscriber != nil {
-		log.Println("another hub attemped to subscribe, ignoring")
-		return
-	}
-	s.subscriber = ch
 }
 
 // Marshal serializes the given interface to json
@@ -58,48 +38,33 @@ func (s *JSONSerializer) Marshal(v interface{}) ([]byte, error) {
 	return data, nil
 }
 
-func (s *JSONSerializer) In() chan service.Event {
+func (s *JSONSerializer) In() chan Event {
 	return s.in
 }
 
 func (s *JSONSerializer) readPump() {
-	for {
-		data, ok := <-s.in
-		if !ok {
-			return
-		}
-
-		payload, err := s.Marshal(data)
-		envelope := envelope{recipient: "all", data: payload}
+	for event := range s.in {
+		payload, err := s.Marshal(event)
 		if err != nil {
-			// TODO: handle broken payload
-			log.Println(err)
+			log.Println("marshal error:", err)
 			continue
 		}
-		s.out <- envelope
 
-	}
-}
+		// Route based on Target
+		switch {
+		case event.Target.IsBroadcast():
+			s.hub.Broadcast(payload)
 
-// Right now this sends to all subscribers, which is not what we want.
+		case event.Target.IsBroadcastExcept():
+			exceptUserID := event.Target.GetExceptUserID()
+			s.hub.BroadcastExcept(payload, exceptUserID)
 
-func (s *JSONSerializer) writePump() {
-	for {
-		envelope, ok := <-s.out
-		if !ok {
-			// channel closed
-			return
-		}
+		case event.Target.IsTargetUser():
+			userID := event.Target.GetUserID()
+			s.hub.SendToUser(payload, userID)
 
-		select {
-		case s.subscriber <- envelope.data:
 		default:
-			// handle
+			log.Printf("unknown target type: %s", event.Target)
 		}
 	}
 }
-
-// idea: envelope that stores recipient id and payload, maps to map[id]chan
-// need way of propagating hub id through service and into serializer
-// envelope interface? GetID() string, GetPayload() ?
-// At that point serializer feels redundant, can demote to a bridging layer
