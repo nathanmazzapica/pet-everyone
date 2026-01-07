@@ -38,7 +38,7 @@ func Connect(cfg Config) *Client {
 		Protocol: 2,
 	})
 
-	return &Client{rdb}
+	return &Client{client: rdb}
 }
 
 func (c *Client) RDB() *redis.Client {
