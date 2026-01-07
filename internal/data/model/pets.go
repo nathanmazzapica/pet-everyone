@@ -2,7 +2,6 @@ package model
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -64,10 +63,6 @@ func (p *PetModel) Get(id string) (*Pet, error) {
 
 	if err != nil {
 		return nil, err
-	}
-
-	if err != nil {
-		fmt.Println("failed to store in cache")
 	}
 
 	return &pet, err
