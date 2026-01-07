@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"errors"
 	"log"
+	"pet-everyone/internal/wal"
 	"sync"
 	"time"
 )
@@ -19,15 +21,21 @@ type PetService struct {
 	pendingUpdates map[string]uint64
 	mu             *sync.RWMutex
 	db             PetDatabase
+	wal            *wal.PetCountWAL
 }
 
 func NewPetService(ctx context.Context, petID string, model PetDatabase) *PetService {
+	wal, err := wal.NewPetCountWAL(petID)
+	if err != nil {
+		log.Printf("[PET SERVICE %s]: failed to create pet count WAL. err: %s", petID, err)
+	}
 	service := &PetService{
 		petID:    petID,
 		petCount: 0,
 		dbQueue:  make(map[string]uint64),
 		mu:       &sync.RWMutex{},
 		db:       model,
+		wal:      wal,
 	}
 	service.init(ctx)
 	return service
@@ -61,6 +69,22 @@ func (s *PetService) init(ctx context.Context) {
 	go s.persistCountsToDatabase(ctx)
 }
 
+func (s *PetService) shutdown() error {
+	log.Printf("[PET SERVICE %s]: shutting down", s.petID)
+	// save pending updates to DB
+	s.flushBuffer()
+	// save failed updates to WAL
+	err := s.flushPendingUpdatesToWAL()
+	if err != nil {
+		// disk/quota is full, we can't recover from this
+		log.Printf("[PET SERVICE %s]: could not flush to WAL: %s", s.petID, err)
+		return err
+	}
+
+	s.wal.Close()
+	return nil
+}
+
 func (s *PetService) persistCountsToDatabase(ctx context.Context) {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
@@ -69,8 +93,7 @@ func (s *PetService) persistCountsToDatabase(ctx context.Context) {
 		case <-ticker.C:
 			s.flushBuffer()
 		case <-ctx.Done():
-			log.Printf("[PET SERVICE %s]: shutting down", s.petID)
-			s.flushBuffer()
+			log.Println(s.shutdown())
 			return
 		}
 	}
@@ -95,13 +118,14 @@ func (s *PetService) flushBuffer() {
 			s.pendingUpdates[userID] += count
 		} else {
 			if len(s.pendingUpdates) >= MAX_RETRY_QUEUE_SIZE {
-				log.Printf("[PET SERVICE %s]: QUEUE FULL flushing %d clicks for user %s\n", s.petID, count, userID)
+				log.Printf("[PET SERVICE %s]: QUEUE FULL dropping %d clicks for user %s\n", s.petID, count, userID)
 				continue
 			}
 			s.pendingUpdates[userID] = count
 		}
 	}
 
+	failures := 0
 	for userID, count := range s.pendingUpdates {
 		err := s.db.UpdatePetCount(s.petID, userID, count)
 		if err == nil {
@@ -110,6 +134,23 @@ func (s *PetService) flushBuffer() {
 			log.Printf("[PET SERVICE %s]: ERROR flushing %d clicks for user %s: %s. Retrying next round\n", s.petID, count, userID, err)
 		}
 	}
+
+	log.Printf("[PET SERVICE %s]: flushed %d click updates to DB with %d errors\n", s.petID, len(snapshot), failures)
+}
+
+func (s *PetService) flushPendingUpdatesToWAL() error {
+	if s.wal == nil {
+		return errors.New("WAL not initialized")
+	}
+
+	for userID, count := range s.pendingUpdates {
+		err := s.wal.WriteEntry(userID, count)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *PetService) Is() {}
