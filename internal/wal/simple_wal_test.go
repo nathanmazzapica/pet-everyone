@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewSimpleWAL(t *testing.T) {
-	_, err := NewPetCountWAL("test-pet")
+	WAL, err := NewPetCountWAL("test-pet")
 	if err != nil {
 		t.Error(err)
 	}
