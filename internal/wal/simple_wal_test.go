@@ -9,14 +9,14 @@ import (
 )
 
 func TestNewSimpleWAL(t *testing.T) {
-	_, err := NewSimpleWAL("wal.log")
+	_, err := NewPetCountWAL("wal.log", "")
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestSimpleWAL_WriteEntry(t *testing.T) {
-	WAL, _ := NewSimpleWAL("wal.log")
+	WAL, _ := NewPetCountWAL("wal.log", "")
 	defer os.Remove("wal.log")
 
 	entries := dummyData()
@@ -41,7 +41,7 @@ func dummyData() map[string]uint64 {
 }
 
 func TestSimpleWAL_Recover(t *testing.T) {
-	WAL, _ := NewSimpleWAL("wal.log")
+	WAL, _ := NewPetCountWAL("wal.log", "")
 
 	for id, count := range dummyData() {
 		WAL.WriteEntry(id, count)
@@ -56,7 +56,7 @@ func TestSimpleWAL_Recover(t *testing.T) {
 }
 
 func TestSimpleWAL_Close(t *testing.T) {
-	WAL, _ := NewSimpleWAL("wal.log")
+	WAL, _ := NewPetCountWAL("wal.log", "")
 	err := WAL.Close()
 	if err != nil {
 		t.Error(err)

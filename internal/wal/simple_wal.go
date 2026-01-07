@@ -18,7 +18,7 @@ type WAL interface {
 	Close() error
 }
 
-type SimpleWAL struct {
+type PetCountWAL struct {
 	filename string
 	mu       sync.Mutex
 	file     *os.File
@@ -38,8 +38,9 @@ var (
 	ErrMalformedUUID     = fmt.Errorf("malformed UUID")
 )
 
-func NewSimpleWAL(filename string) (*SimpleWAL, error) {
-	w := &SimpleWAL{filename: filename}
+func NewPetCountWAL(petID string) (*PetCountWAL, error) {
+	filename := fmt.Sprintf("pet_%s.wal", petID)
+	w := &PetCountWAL{filename: filename}
 
 	// Open file once on creation for speed
 	f, err := os.OpenFile(w.filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
@@ -52,7 +53,7 @@ func NewSimpleWAL(filename string) (*SimpleWAL, error) {
 	return w, nil
 }
 
-func (w *SimpleWAL) WriteEntry(userID string, count uint64) error {
+func (w *PetCountWAL) WriteEntry(userID string, count uint64) error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -66,7 +67,7 @@ func (w *SimpleWAL) WriteEntry(userID string, count uint64) error {
 	return nil
 }
 
-func (w *SimpleWAL) Recover() (map[string]uint64, error) {
+func (w *PetCountWAL) Recover() (map[string]uint64, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -108,6 +109,6 @@ func (w *SimpleWAL) Recover() (map[string]uint64, error) {
 	return rebuiltState, nil
 }
 
-func (w *SimpleWAL) Close() error {
+func (w *PetCountWAL) Close() error {
 	return w.file.Close()
 }
