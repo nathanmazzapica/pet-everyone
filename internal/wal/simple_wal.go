@@ -1,3 +1,4 @@
+// Package wal provides simple Write Ahead Logging to preserve user counts in the event of unexpected shutdowns or failures.
 package wal
 
 import (
