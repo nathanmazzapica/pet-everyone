@@ -23,12 +23,13 @@ type UserModel struct {
 }
 
 type User struct {
-	ID        uuid.UUID `sql:"user_id"`
-	Email     string    `sql:"email"`
-	CreatedAt time.Time `sql:"created_at"`
+	ID          uuid.UUID `sql:"user_id" json:"user_id"`
+	Email       string    `sql:"email" json:"email"`
+	DisplayName string    `sql:"display_name" json:"display_name"`
+	CreatedAt   time.Time `sql:"created_at" json:"created_at"`
 }
 
-func (u *UserModel) Create(email, password string) (*User, error) {
+func (u *UserModel) Create(email, password, displayName string) (*User, error) {
 
 	if len(email) == 0 {
 		return nil, ErrEmptyEmail
@@ -48,9 +49,10 @@ func (u *UserModel) Create(email, password string) (*User, error) {
 	}
 
 	user := &User{
-		ID:        uuid.New(),
-		Email:     email,
-		CreatedAt: time.Now(),
+		ID:          uuid.New(),
+		Email:       email,
+		DisplayName: displayName,
+		CreatedAt:   time.Now(),
 	}
 
 	hash, err := auth.HashPassword(password)
@@ -58,11 +60,25 @@ func (u *UserModel) Create(email, password string) (*User, error) {
 		return nil, err
 	}
 
-	query := `INSERT INTO RegisteredUser (user_id, email, password_hash) VALUES ($1, $2, $3)`
-	_, err = u.DB.Exec(query, user.ID, user.Email, hash)
+	tx, err := u.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	if err := insertDisplayName(tx, user.DisplayName, ownerTypeUser, user.ID); err != nil {
+		return nil, err
+	}
+
+	query := `INSERT INTO RegisteredUser (user_id, email, password_hash, display_name) VALUES ($1, $2, $3, $4)`
+	_, err = tx.Exec(query, user.ID, user.Email, hash, user.DisplayName)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
 	}
 
 	return user, nil
@@ -76,11 +92,11 @@ func (u *UserModel) GetPasswordHashByEmail(email string) (string, error) {
 }
 
 func (u *UserModel) Get(id *uuid.UUID) (*User, error) {
-	query := `SELECT user_id, email, created_at FROM RegisteredUser WHERE user_id = $1`
+	query := `SELECT user_id, email, display_name, created_at FROM RegisteredUser WHERE user_id = $1`
 	row := u.DB.QueryRow(query, id)
 
 	var user User
-	err := row.Scan(&user.ID, &user.Email, &user.CreatedAt)
+	err := row.Scan(&user.ID, &user.Email, &user.DisplayName, &user.CreatedAt)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrUserNotFound
 	}
@@ -88,11 +104,11 @@ func (u *UserModel) Get(id *uuid.UUID) (*User, error) {
 }
 
 func (u *UserModel) GetByEmail(email string) (*User, error) {
-	query := `SELECT user_id, email, created_at FROM RegisteredUser WHERE email = $1`
+	query := `SELECT user_id, email, display_name, created_at FROM RegisteredUser WHERE email = $1`
 	row := u.DB.QueryRow(query, email)
 
 	var user User
-	err := row.Scan(&user.ID, &user.Email, &user.CreatedAt)
+	err := row.Scan(&user.ID, &user.Email, &user.DisplayName, &user.CreatedAt)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrUserNotFound
 	}
@@ -115,6 +131,38 @@ func (u *UserModel) Delete(id *uuid.UUID) error {
 	query := `DELETE FROM RegisteredUser WHERE user_id = $1`
 	_, err := u.DB.Exec(query, id)
 	return err
+}
+
+// SetDisplayName updates the display name for a user, enforcing global uniqueness.
+func (u *UserModel) SetDisplayName(userID uuid.UUID, displayName string) (string, error) {
+	tx, err := u.DB.Begin()
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback()
+
+	if err := upsertDisplayName(tx, displayName, ownerTypeUser, userID); err != nil {
+		return "", err
+	}
+
+	res, err := tx.Exec(`UPDATE RegisteredUser SET display_name = $1 WHERE user_id = $2`, displayName, userID)
+	if err != nil {
+		return "", err
+	}
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return "", err
+	}
+	if affected == 0 {
+		return "", ErrUserNotFound
+	}
+
+	if err := tx.Commit(); err != nil {
+		return "", err
+	}
+
+	return displayName, nil
 }
 
 func (u *UserModel) checkEmailExists(email string) (bool, error) {

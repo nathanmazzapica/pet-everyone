@@ -98,16 +98,16 @@ func (app *Config) Login() error {
 	return fmt.Errorf("not implemented")
 }
 
-func (app *Config) Signup(email, password string) error {
-	user, err := app.UserModel().Create(email, password)
+func (app *Config) Signup(email, password, displayName string) (*model.User, error) {
+	user, err := app.UserModel().Create(email, password, displayName)
 	if err != nil {
 		app.logger.Error("failed to create user", "err", err)
-		return err
+		return nil, err
 	}
 
 	app.logger.Info("new user created", "email", email, "user_id", user.ID)
 
-	return nil
+	return user, nil
 }
 
 func (app *Config) GetUserIDFromToken(token string) (string, error) {

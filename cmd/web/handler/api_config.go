@@ -38,6 +38,8 @@ func Routes(app *application.Config) *http.ServeMux {
 	mux.Handle("POST /api/signup", handleSignup(app))
 	mux.Handle("POST /api/logout", handleLogout(app))
 	mux.Handle("POST /api/guest/recover", handleGuestRecover(app))
+	mux.Handle("GET /api/display-name", handleDisplayNameGet(app))
+	mux.Handle("PATCH /api/display-name", authMiddleware(handleDisplayNameSet(app)))
 	mux.Handle("POST /api/create", authMiddleware(handleCreatePet(app)))
 	mux.Handle("GET /api/pet/{pet_id}/count", handlePersonalPetCount(app))
 
