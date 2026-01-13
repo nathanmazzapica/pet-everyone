@@ -16,6 +16,8 @@ func TestValidate(t *testing.T) {
 		{"", false, "empty not allowed"},
 		{"thisiswaytoolongforthisfield", false, "length limit enforced"},
 		{"bad-name", false, "hyphen not allowed"},
+		{"shithead", false, "profanity blocked"},
+		{"5h1thead", false, "leet profanity blocked"},
 	}
 
 	for _, tc := range cases {

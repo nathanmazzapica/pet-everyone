@@ -7,14 +7,17 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/TwiN/go-away"
 )
 
 const MaxLength = 20
 
 var (
-	errEmptyName    = errors.New("display name cannot be empty")
-	errTooLong      = fmt.Errorf("display name must be at most %d characters", MaxLength)
-	errInvalidChars = errors.New("display name may only contain letters, digits, or underscores")
+	errEmptyName      = errors.New("display name cannot be empty")
+	errTooLong        = fmt.Errorf("display name must be at most %d characters", MaxLength)
+	errInvalidChars   = errors.New("display name may only contain letters, digits, or underscores")
+	errProfaneOrSlurs = errors.New("name cannot contain profanity or slurs")
 
 	allowedPattern = regexp.MustCompile(`^[A-Za-z0-9_]+$`)
 
@@ -52,10 +55,17 @@ func Validate(name string) error {
 	if !allowedPattern.MatchString(name) {
 		return errInvalidChars
 	}
+	if containsProfanity(name) {
+		return errProfaneOrSlurs
+	}
 	return nil
 }
 
 // Normalize lower-cases a display name for case-insensitive comparisons.
 func Normalize(name string) string {
 	return strings.ToLower(name)
+}
+
+func containsProfanity(name string) bool {
+	return goaway.IsProfane(name)
 }
