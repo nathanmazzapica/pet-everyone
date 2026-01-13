@@ -58,7 +58,9 @@ CREATE TABLE UserPetsClickCount
     ),
 
     CONSTRAINT pet_id_user_id_unique
-    UNIQUE (pet_id, user_id)
+    UNIQUE (pet_id, user_id),
+    CONSTRAINT pet_id_guest_id_unique
+    UNIQUE (pet_id, guest_id)
 );
 
 CREATE UNIQUE INDEX uniq_user_pet
