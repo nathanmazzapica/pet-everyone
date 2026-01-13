@@ -31,11 +31,20 @@ main {
 
 header {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
     background: linear-gradient(90deg, var(--accent), var(--accent-2)); /* violet-700 to purple-600 */
     color: #ffffff;
     padding: 14px 20px;
     margin: 0;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    gap: 16px;
+}
+
+.nav-left,
+.nav-right {
+    display: flex;
+    align-items: center;
     gap: 16px;
 }
 
@@ -47,6 +56,18 @@ header a {
 
 header a:hover {
     text-decoration: underline;
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #fff;
+    box-shadow: none;
+}
+
+.btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.15);
+    text-decoration: none;
 }
 
 .card-container {

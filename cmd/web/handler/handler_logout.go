@@ -23,10 +23,22 @@ func handleLogout(app *application.Config) http.Handler {
 			SameSite: http.SameSiteLaxMode,
 		})
 
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_present",
+			Value:    "",
+			Path:     "/",
+			Expires:  time.Unix(0, 0),
+			MaxAge:   -1,
+			HttpOnly: false,
+			Secure:   false, // TODO: set true in production
+			SameSite: http.SameSiteLaxMode,
+		})
+
 		// TODO: optionally issue/refresh guest_id cookie here once guest flow is wired
 
 		app.RespondWithJSON(w, http.StatusOK, map[string]string{
 			"message": "logged out",
 		})
+
 	})
 }

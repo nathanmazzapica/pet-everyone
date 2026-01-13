@@ -52,6 +52,16 @@ func handleSignup(app *application.Config) http.Handler {
 			SameSite: http.SameSiteLaxMode,
 		})
 
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_present",
+			Value:    "1",
+			Path:     "/",
+			Expires:  time.Now().UTC().Add(30 * 24 * time.Hour),
+			HttpOnly: false,
+			Secure:   false, // TODO: set true in production
+			SameSite: http.SameSiteLaxMode,
+		})
+
 		type successResponse struct {
 			Message string `json:"message"`
 		}
