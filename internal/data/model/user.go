@@ -1,4 +1,4 @@
-package models
+package model
 
 import (
 	"database/sql"
@@ -97,6 +97,18 @@ func (u *UserModel) GetByEmail(email string) (*User, error) {
 		return nil, ErrUserNotFound
 	}
 	return &user, err
+}
+
+func (u *UserModel) GetPetCountByPetID(userID *uuid.UUID, petID *string) (int64, error) {
+	query := `SELECT COALESCE(SUM(click_count), 0) FROM UserPetsClickCount WHERE pet_id = $1 AND user_id = $2;`
+	row := u.DB.QueryRow(query, petID, userID)
+
+	var count int64
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, err
 }
 
 func (u *UserModel) Delete(id *uuid.UUID) error {

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"pet-everyone/cmd/web/application"
 	"pet-everyone/internal/auth"
-	"pet-everyone/internal/db/models"
+	"pet-everyone/internal/data/model"
 	"time"
 )
 
@@ -27,8 +27,8 @@ func handleLogin(app *application.Config) http.Handler {
 		}
 
 		type response struct {
-			models.User
-			Token string `json:"token"`
+			model.User
+			Message string `json:"message"`
 		}
 
 		decoder := json.NewDecoder(r.Body)
@@ -69,6 +69,27 @@ func handleLogin(app *application.Config) http.Handler {
 			return
 		}
 
-		app.RespondWithJSON(w, http.StatusOK, response{User: *user, Token: token})
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_token",
+			Value:    token,
+			Path:     "/",
+			Expires:  time.Now().UTC().Add(30 * 24 * time.Hour),
+			HttpOnly: true,
+			Secure:   false, // TODO: set true in production
+			SameSite: http.SameSiteLaxMode,
+		})
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_present",
+			Value:    "1",
+			Path:     "/",
+			Expires:  time.Now().UTC().Add(30 * 24 * time.Hour),
+			HttpOnly: false,
+			Secure:   false, // TODO: set true in production
+			SameSite: http.SameSiteLaxMode,
+		})
+
+		app.RespondWithJSON(w, http.StatusOK, response{User: *user, Message: "login successful"})
+
 	})
 }

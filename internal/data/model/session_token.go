@@ -1,4 +1,4 @@
-package models
+package model
 
 import (
 	"database/sql"
@@ -48,4 +48,12 @@ func (s *SessionTokenModel) Get(token string) (*SessionToken, error) {
 		}
 	}
 	return &session, err
+}
+
+func (s *SessionTokenModel) GetUserID(token string) (string, error) {
+	session, err := s.Get(token)
+	if err != nil {
+		return "", err
+	}
+	return session.UserID, nil
 }

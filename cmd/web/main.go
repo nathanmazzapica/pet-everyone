@@ -1,13 +1,15 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
 	"pet-everyone/cmd/web/application"
 	"pet-everyone/cmd/web/handler"
-	"pet-everyone/internal/db"
-	"pet-everyone/internal/db/models"
+	"pet-everyone/internal/data/cache"
+	"pet-everyone/internal/data/db"
+	"pet-everyone/internal/data/model"
 	"pet-everyone/internal/registry"
 	"time"
 
@@ -15,6 +17,7 @@ import (
 )
 
 func main() {
+	startTime := time.Now()
 	err := godotenv.Load(".env")
 	if err != nil {
 		panic(err)
@@ -40,11 +43,21 @@ func main() {
 		log.Fatalf("Error connecting to db: %v", err)
 	}
 	defer client.Close()
-	log.Println("Connected to db")
+	log.Println("Connected to db in", time.Since(startTime).Round(time.Millisecond))
+
+	rdbClient := cache.Connect(cache.LoadConfig())
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := rdbClient.RDB().Ping(ctx).Err(); err != nil {
+		log.Fatalf("Error connecting to redis: %v", err)
+	}
+	defer rdbClient.Close()
+	log.Println("Connected to redis in", time.Since(startTime).Round(time.Millisecond))
 
 	app := application.NewConfig(
 		client,
-		registry.NewHubRegistry(&models.PetModel{DB: client.DB()}),
+		rdbClient,
+		registry.NewHubRegistry(&model.PetModel{DB: client.DB()}),
 		filepathRoot,
 		assetsRoot,
 		port,
@@ -62,6 +75,7 @@ func main() {
 		ReadTimeout:       10 * time.Second,
 	}
 
+	log.Println("Started server in", time.Since(startTime).Round(time.Millisecond))
 	log.Printf("Serving on http://localhost:%s/app\n", port)
 	log.Fatal(srv.ListenAndServe())
 

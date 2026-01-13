@@ -1,0 +1,451 @@
+openapi: 3.0.3
+info:
+  title: Pet Everyone API
+  version: 0.1.0
+  description: |
+    HTTP API for Pet Everyone. Auth uses HttpOnly cookies:
+    - `session_token`: authenticated users
+    - `guest_id`: guests (issued automatically when no session)
+    WebSocket connections reuse the same cookies.
+servers:
+  - url: http://localhost:{port}
+    description: Local development server
+    variables:
+      port:
+        default: "8082"
+
+components:
+  securitySchemes:
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: session_token
+      description: Authenticated user session token (HttpOnly cookie)
+    GuestCookie:
+      type: apiKey
+      in: cookie
+      name: guest_id
+      description: Guest identity token (HttpOnly cookie)
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        detail:
+          type: string
+      required: [message]
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required: [email, password]
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        message:
+          type: string
+          example: "login successful"
+    SignupRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required: [email, password]
+    SignupResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        message:
+          type: string
+          example: "user created"
+    LogoutResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "logged out"
+    GuestRecoverRequest:
+      type: object
+      properties:
+        recovery_code:
+          type: string
+          description: guest_id provided to restore guest session
+      required: [recovery_code]
+    GuestRecoverResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "guest session restored"
+    CreatePetResponse:
+      type: object
+      properties:
+        pet_id:
+          type: string
+        message:
+          type: string
+          example: "pet created"
+    Pet:
+      type: object
+      properties:
+        pet_id:
+          type: string
+        pet_name:
+          type: string
+        pet_count:
+          type: integer
+          format: int64
+        image_url:
+          type: string
+    PetList:
+      type: object
+      properties:
+        pets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pet'
+    User:
+      type: object
+      properties:
+        user_id:
+          type: string
+        email:
+          type: string
+          format: email
+        created_at:
+          type: string
+          format: date-time
+
+paths:
+  /api/login:
+    post:
+      summary: Authenticate user and set session cookie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated; session cookie set
+          headers:
+            Set-Cookie:
+              description: HttpOnly `session_token` cookie
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/signup:
+    post:
+      summary: Create user and set session cookie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: User created; session cookie set
+          headers:
+            Set-Cookie:
+              description: HttpOnly `session_token` cookie
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignupResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/logout:
+    post:
+      summary: Clear session cookie and optionally refresh guest cookie
+      security:
+        - SessionCookie: []
+      responses:
+        '200':
+          description: Logged out
+          headers:
+            Set-Cookie:
+              description: Clears `session_token`; may set `guest_id`
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+        '401':
+          description: Not authenticated (if enforced)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/guest/recover:
+    post:
+      summary: Restore guest session using recovery code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuestRecoverRequest'
+      responses:
+        '200':
+          description: Guest session restored; guest cookie set
+          headers:
+            Set-Cookie:
+              description: HttpOnly `guest_id` cookie
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuestRecoverResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Invalid recovery code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/create:
+    post:
+      summary: Create a new pet (registered users only)
+      security:
+        - SessionCookie: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+              required: [name, image]
+      responses:
+        '201':
+          description: Pet created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatePetResponse'
+        '400':
+          description: Bad request (invalid data or file)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Guests cannot create pets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /pet/{pet_id}:
+    get:
+      summary: Render pet page (HTML)
+      parameters:
+        - name: pet_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pet page HTML; may set guest cookie if missing
+          headers:
+            Set-Cookie:
+              description: HttpOnly `guest_id` cookie for guests
+              schema:
+                type: string
+          content:
+            text/html:
+              schema:
+                type: string
+        '404':
+          description: Pet not found
+        '500':
+          description: Server error
+
+  /:
+    get:
+      summary: Render home page (HTML)
+      responses:
+        '200':
+          description: Home page HTML; may set guest cookie if missing
+          headers:
+            Set-Cookie:
+              description: HttpOnly `guest_id` cookie for guests
+              schema:
+                type: string
+          content:
+            text/html:
+              schema:
+                type: string
+        '500':
+          description: Server error
+
+  /pet/{pet_id}/ws:
+    get:
+      summary: WebSocket upgrade for pet interactions
+      parameters:
+        - name: pet_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '101':
+          description: Switching protocols (WebSocket)
+        '400':
+          description: Missing/invalid identity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (if policy denies)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      description: |
+        Requires cookies for identity. Prefers `session_token`; otherwise `guest_id`.
+        No query-string tokens. CORS/origin checks enforced server-side.
+
+  /api/pet/{pet_id}/count:
+    get:
+      summary: Get caller's personal pet count
+      parameters:
+        - name: pet_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Personal count for the caller (user or guest)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pet_id:
+                    type: string
+                  personal_count:
+                    type: integer
+                    format: int64
+                required: [pet_id, personal_count]
+        '400':
+          description: Invalid pet_id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing or invalid identity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Pet not found (optional)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      description: |
+        Returns the caller's personal click count for the given pet. Uses `session_token` for users or `guest_id` for guests; if no record exists, returns 0.

@@ -1,7 +1,8 @@
 {{ define "title" }}Pet Everyone{{ end }}
 
 {{ define "content" }}
-    <h1 style="text-align: center;">Pets</h1>
+    {{ $numPets := len .Pets }}
+    <h1 style="text-align: center;">Welcome to our Zoo of {{ $numPets }} Pets</h1>
         <div id="pet-card-container">
             <div class="card-container">
                 {{ range .Pets }}
@@ -9,7 +10,7 @@
                 <div class="card pet-card">
                     <h3 class="card-title">{{ .PetName }}</h3>
                     <img class="card-image" src="{{ .ImageURL }}"></img>
-                    <p>Total pets: 1,000,000</p>
+                    <p>Total pets: {{ .PetCount }}</p>
                     <p>Active petters: 10</p>
                     <a class=btn href="/pet/{{ .PetID }}">Pet</a>
                 </div>

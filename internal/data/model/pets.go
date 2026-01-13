@@ -1,24 +1,26 @@
-package models
+package model
 
 import (
 	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 )
 
 type Pet struct {
-	PetID       string
-	Name        string
-	createdAt   time.Time
-	updatedAt   time.Time
-	Visibility  bool
-	userID      *string
-	ActiveImage *string
+	PetID       string    `json:"pet_id" db:"pet_id" redis:"pet_id"`
+	Name        string    `json:"pet_name" db:"pet_name" redis:"pet_name"`
+	CreatedAt   time.Time `json:"created_at" db:"created_at" redis:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at" db:"updated_at" redis:"updated_at"`
+	Visibility  bool      `json:"visibility" db:"visibility" redis:"visibility"`
+	UserID      *string   `json:"user_id" db:"user_id" redis:"user_id"`
+	ActiveImage *string   `json:"active_image" db:"active_image" redis:"active_image"`
 }
 
 type PetModel struct {
-	DB *sql.DB
+	DB    *sql.DB
+	Cache *redis.Client
 }
 
 func (p *PetModel) GetAll() ([]Pet, error) {
@@ -33,7 +35,7 @@ func (p *PetModel) GetAll() ([]Pet, error) {
 
 	for rows.Next() {
 		var pet Pet
-		err := rows.Scan(&pet.PetID, &pet.Name, &pet.createdAt, &pet.updatedAt, &pet.Visibility, &pet.userID, &pet.ActiveImage)
+		err := rows.Scan(&pet.PetID, &pet.Name, &pet.CreatedAt, &pet.UpdatedAt, &pet.Visibility, &pet.UserID, &pet.ActiveImage)
 		if err != nil {
 			return nil, err
 		}
@@ -45,16 +47,17 @@ func (p *PetModel) GetAll() ([]Pet, error) {
 
 func (p *PetModel) Get(id string) (*Pet, error) {
 	var pet Pet
+
 	query := `SELECT * FROM pet WHERE pet_id = $1;`
 	row := p.DB.QueryRow(query, id)
 
 	err := row.Scan(
 		&pet.PetID,
 		&pet.Name,
-		&pet.createdAt,
-		&pet.updatedAt,
+		&pet.CreatedAt,
+		&pet.UpdatedAt,
 		&pet.Visibility,
-		&pet.userID,
+		&pet.UserID,
 		&pet.ActiveImage,
 	)
 
@@ -62,7 +65,7 @@ func (p *PetModel) Get(id string) (*Pet, error) {
 		return nil, err
 	}
 
-	return &pet, nil
+	return &pet, err
 }
 
 func (p *PetModel) GetPetImage(id *string) (string, error) {
@@ -79,11 +82,12 @@ func (p *PetModel) GetPetImage(id *string) (string, error) {
 	return imageURL, err
 }
 
-func (p *PetModel) GetPetCount(id *string) (int, error) {
-	var count int
+func (p *PetModel) GetPetCount(id *string) (int64, error) {
+	var count int64
 	query := `SELECT COALESCE(SUM(click_count), 0) FROM UserPetsClickCount WHERE pet_id = $1;`
 
 	row := p.DB.QueryRow(query, id)
+
 	err := row.Scan(&count)
 	if err != nil {
 		return -1, err
@@ -91,11 +95,30 @@ func (p *PetModel) GetPetCount(id *string) (int, error) {
 	return count, err
 }
 
+func (p *PetModel) UpdatePetCountUser(petID string, userID string, count uint64) error {
+	query := `INSERT INTO UserPetsClickCount (pet_id, user_id, click_count) VALUES ($1, $2, $3) ON CONFLICT (pet_id, user_id) DO UPDATE SET click_count = UserPetsClickCount.click_count + $3;`
+	_, err := p.DB.Exec(query, petID, userID, count)
+	return err
+}
+
+func (p *PetModel) UpdatePetCountGuest(petID string, guestID string, count uint64) error {
+	query := `INSERT INTO UserPetsClickCount (pet_id, guest_id, click_count)
+			 VALUES ($1, $2, $3)
+			 ON CONFLICT ON CONSTRAINT pet_id_guest_id_unique
+			 DO UPDATE SET click_count = UserPetsClickCount.click_count + $3;`
+	_, err := p.DB.Exec(query, petID, guestID, count)
+	return err
+}
+
 func (p *PetModel) CreatePet(pet *Pet) error {
 	query := `INSERT INTO pet (pet_id, pet_name, visibility, active_image) VALUES ($1, $2, $3, $4);`
 
 	pet.PetID = uuid.New().String()
 	_, err := p.DB.Exec(query, pet.PetID, pet.Name, pet.Visibility, pet.ActiveImage)
+
+	if err != nil {
+		return err
+	}
 
 	return err
 }

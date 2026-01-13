@@ -5,11 +5,10 @@ import (
 )
 
 type ChatService struct {
-	events chan<- Event
 }
 
-func NewChatService(events chan<- Event) *ChatService {
-	return &ChatService{events: events}
+func NewChatService() *ChatService {
+	return &ChatService{}
 }
 
 func moderate(msg string) string {
@@ -17,12 +16,16 @@ func moderate(msg string) string {
 	return msg
 }
 
-func (c *ChatService) Send(msg string) {
+type ChatMessage struct {
+	Msg    string
+	Author string
+}
+
+func (c *ChatService) ProcessMessage(msg string, userID string) (ChatMessage, error) {
 	msg = moderate(msg)
-	log.Println("Sending message:", msg)
-	type msgData struct {
-		Msg    string `json:"msg"`
-		Author string `json:"author"`
-	}
-	c.events <- Event{Type: "chat", Data: msgData{Msg: msg, Author: "User"}}
+	log.Println("Processing message:", msg)
+	return ChatMessage{
+		Msg:    msg,
+		Author: userID,
+	}, nil
 }

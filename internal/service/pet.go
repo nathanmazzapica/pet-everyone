@@ -1,47 +1,89 @@
 package service
 
 import (
+	"context"
+	"errors"
 	"log"
-	"pet-everyone/internal/db/models"
+	"pet-everyone/internal/wal"
 	"sync"
+	"time"
 )
 
-type PetService struct {
-	petID    string
-	petCount uint64
-	mu       *sync.RWMutex
-	events   chan<- Event
-	db       *models.PetModel
+type PetDatabase interface {
+	GetPetCount(id *string) (int64, error)
+	UpdatePetCountUser(petID string, userID string, count uint64) error
+	UpdatePetCountGuest(petID string, guestID string, count uint64) error
 }
 
-func NewPetService(petID string, model *models.PetModel, out chan<- Event) *PetService {
-	return &PetService{
-		petID:    petID,
-		petCount: 0, // will get from db later
-		mu:       &sync.RWMutex{},
-		events:   out,
-		db:       model,
+// Actor stores a UUID and a flag stating whether it belongs to a Guest or a Registered User
+type Actor struct {
+	ID      string
+	IsGuest bool
+}
+
+type actorKey struct {
+	id      string
+	isGuest bool
+}
+
+func keyForActor(a Actor) actorKey {
+	return actorKey{id: a.ID, isGuest: a.IsGuest}
+}
+
+func encodeActorKey(k actorKey) string {
+	if k.isGuest {
+		return "g:" + k.id
 	}
+	return "u:" + k.id
 }
 
-// petEvent is used to send pet count to websocket clients
-type petEvent struct {
-	Ack byte `json:"c"`
+func decodeActorKey(s string) (actorKey, error) {
+	if len(s) < 3 {
+		return actorKey{}, errors.New("malformed actor key")
+	}
+	prefix := s[:2]
+	id := s[2:]
+	return actorKey{id: id, isGuest: prefix == "g:"}, nil
 }
 
-func (s *PetService) IncrementPetCount() error {
+type PetService struct {
+	petID          string
+	petCount       uint64
+	dbQueue        map[actorKey]uint64
+	pendingUpdates map[actorKey]uint64
+	mu             *sync.RWMutex
+	db             PetDatabase
+	wal            *wal.PetCountWAL
+}
+
+func NewPetService(ctx context.Context, petID string, model PetDatabase) *PetService {
+	wal, err := wal.NewPetCountWAL(petID)
+	if err != nil {
+		log.Printf("[PET SERVICE %s]: failed to create pet count WAL. err: %s", petID, err)
+	}
+	service := &PetService{
+		petID:    petID,
+		petCount: 0,
+		dbQueue:  make(map[actorKey]uint64),
+		mu:       &sync.RWMutex{},
+		db:       model,
+		wal:      wal,
+	}
+	service.init(ctx)
+	return service
+}
+
+func (s *PetService) IncrementPetCount(actor Actor) error {
+	key := keyForActor(actor)
 	s.mu.Lock()
 	s.petCount++
+	s.dbQueue[key]++
 	s.mu.Unlock()
-	petEvent := Event{Type: "pet", Data: petEvent{Ack: 1}}
-	s.events <- petEvent
 	return nil
 }
 
-func (s *PetService) BroadcastPetCount() {
-	count := s.GetPetCount()
-	petEvent := Event{Type: "petcount", Data: count}
-	s.events <- petEvent
+func (s *PetService) BroadcastPetCount() uint64 {
+	return s.GetPetCount()
 }
 
 func (s *PetService) GetPetCount() uint64 {
@@ -50,13 +92,111 @@ func (s *PetService) GetPetCount() uint64 {
 	return s.petCount
 }
 
-func (s *PetService) init() {
+func (s *PetService) init(ctx context.Context) {
 	c, err := s.db.GetPetCount(&s.petID)
 	if err != nil {
 		// TODO: pet service failed to init, figure out how to handle
 		log.Fatal(err)
 	}
 	s.petCount = uint64(c)
+	go s.persistCountsToDatabase(ctx)
+}
+
+func (s *PetService) shutdown() error {
+	log.Printf("[PET SERVICE %s]: shutting down", s.petID)
+	// save pending updates to DB
+	s.flushBuffer()
+	// save failed updates to WAL
+	err := s.flushPendingUpdatesToWAL()
+	if err != nil {
+		// disk/quota is full, we can't recover from this
+		log.Printf("[PET SERVICE %s]: could not flush to WAL: %s", s.petID, err)
+		return err
+	}
+
+	s.wal.Close()
+	return nil
+}
+
+func (s *PetService) persistCountsToDatabase(ctx context.Context) {
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			s.flushBuffer()
+		case <-ctx.Done():
+			log.Println(s.shutdown())
+			return
+		}
+	}
+}
+
+func (s *PetService) flushBuffer() {
+	// make a quick snapshot to minimize dbQueue lock time
+	s.mu.Lock()
+	snapshot := s.dbQueue
+	s.dbQueue = make(map[actorKey]uint64)
+
+	const MAX_RETRY_QUEUE_SIZE = 5000
+
+	if s.pendingUpdates == nil {
+		s.pendingUpdates = make(map[actorKey]uint64)
+	}
+
+	for actorKey, count := range snapshot {
+		_, exists := s.pendingUpdates[actorKey]
+
+		if exists {
+			s.pendingUpdates[actorKey] += count
+		} else {
+			if len(s.pendingUpdates) >= MAX_RETRY_QUEUE_SIZE {
+				log.Printf("[PET SERVICE %s]: QUEUE FULL dropping %d clicks for actor %+v\n", s.petID, count, actorKey)
+				continue
+			}
+			s.pendingUpdates[actorKey] = count
+		}
+	}
+
+	toFlush := s.pendingUpdates
+	s.pendingUpdates = make(map[actorKey]uint64)
+	s.mu.Unlock()
+
+	failures := 0
+	for actorKey, count := range toFlush {
+		var err error
+		if actorKey.isGuest {
+			err = s.db.UpdatePetCountGuest(s.petID, actorKey.id, count)
+		} else {
+			err = s.db.UpdatePetCountUser(s.petID, actorKey.id, count)
+		}
+
+		if err != nil {
+			failures++
+			log.Printf("[PET SERVICE %s]: ERROR flushing %d clicks for actor %+v: %s. Retrying next round\n", s.petID, count, actorKey, err)
+			s.mu.Lock()
+			s.pendingUpdates[actorKey] += count
+			s.mu.Unlock()
+		}
+	}
+
+	log.Printf("[PET SERVICE %s]: flushed %d click updates to DB with %d errors\n", s.petID, len(snapshot), failures)
+}
+
+func (s *PetService) flushPendingUpdatesToWAL() error {
+	if s.wal == nil {
+		return errors.New("WAL not initialized")
+	}
+
+	for actorKey, count := range s.pendingUpdates {
+		encoded := encodeActorKey(actorKey)
+		err := s.wal.WriteEntry(encoded, count)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *PetService) Is() {}

@@ -41,7 +41,8 @@ CREATE TABLE Pet (
 
 CREATE TABLE UserPetsClickCount
 (
-    click_count INT default 0,
+    id SERIAL PRIMARY KEY NOT NULL,
+    click_count BIGINT default 0,
     pet_id      UUID NOT NULL,
     user_id     UUID,
     guest_id    UUID,
@@ -50,10 +51,22 @@ CREATE TABLE UserPetsClickCount
     FOREIGN KEY (user_id) REFERENCES RegisteredUser (user_id),
     FOREIGN KEY (guest_id) REFERENCES Visitor (guest_id),
 
+    CONSTRAINT user_or_guest_present
     CHECK (
         (user_id IS NOT NULL AND guest_id IS NULL) OR
         (user_id IS NULL AND guest_id IS NOT NULL)
     ),
 
-    PRIMARY KEY (pet_id, user_id, guest_id)
+    CONSTRAINT pet_id_user_id_unique
+    UNIQUE (pet_id, user_id),
+    CONSTRAINT pet_id_guest_id_unique
+    UNIQUE (pet_id, guest_id)
 );
+
+CREATE UNIQUE INDEX uniq_user_pet
+    ON UserPetsClickCount (pet_id, user_id)
+    WHERE user_id IS NOT NULL;
+
+CREATE UNIQUE INDEX uniq_guest_pet
+    ON UserPetsClickCount (pet_id, guest_id)
+    WHERE guest_id IS NOT NULL;
