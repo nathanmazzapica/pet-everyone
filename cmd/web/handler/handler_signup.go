@@ -2,9 +2,12 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"pet-everyone/cmd/web/application"
 	"pet-everyone/internal/auth"
+	"pet-everyone/internal/data/model"
+	"pet-everyone/internal/displayname"
 	"time"
 )
 
@@ -21,8 +24,9 @@ func serveSignup(app *application.Config) http.Handler {
 func handleSignup(app *application.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		type parameters struct {
-			Email    string `json:"email"`
-			Password string `json:"password"`
+			Email       string `json:"email"`
+			Password    string `json:"password"`
+			DisplayName string `json:"display_name"`
 		}
 
 		decoder := json.NewDecoder(r.Body)
@@ -33,14 +37,29 @@ func handleSignup(app *application.Config) http.Handler {
 			return
 		}
 
-		err = app.Signup(params.Email, params.Password)
+		if err := displayname.Validate(params.DisplayName); err != nil {
+			app.RespondWithError(w, http.StatusBadRequest, "Invalid display name", err)
+			return
+		}
+
+		user, err := app.Signup(params.Email, params.Password, params.DisplayName)
 		if err != nil {
-			app.RespondWithError(w, http.StatusInternalServerError, "Unable to create user", err)
+			status := http.StatusInternalServerError
+			if errors.Is(err, model.ErrDisplayNameTaken) {
+				status = http.StatusConflict
+			}
+			app.RespondWithError(w, status, "Unable to create user", err)
 			return
 		}
 
 		// TODO: fetch created user/profile, persist session token with user ID
 		token := auth.GenerateSessionToken()
+
+		err = app.SessionTokenModel().Save(token, user.ID.String(), time.Now().UTC().Add(time.Hour*24*30))
+		if err != nil {
+			app.RespondWithError(w, http.StatusInternalServerError, "Unable to save session token", err)
+			return
+		}
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_token",
@@ -63,10 +82,12 @@ func handleSignup(app *application.Config) http.Handler {
 		})
 
 		type successResponse struct {
-			Message string `json:"message"`
+			User    model.User `json:"user"`
+			Message string     `json:"message"`
 		}
 
 		app.RespondWithJSON(w, http.StatusCreated, successResponse{
+			User:    *user,
 			Message: "user created",
 		})
 

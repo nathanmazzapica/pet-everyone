@@ -28,7 +28,7 @@ type Config struct {
 func NewConfig(pool *db.Client, rdbPool *cache.Client, registry *registry.HubRegistry, filepathRoot string, assetsRoot string, port string) *Config {
 	db := pool.DB()
 	rdb := rdbPool.RDB()
-	return &Config{
+	cfg := &Config{
 		petModel:          &model.PetModel{DB: db, Cache: rdb},
 		userModel:         &model.UserModel{DB: db},
 		sessionTokenModel: &model.SessionTokenModel{DB: db},
@@ -39,6 +39,12 @@ func NewConfig(pool *db.Client, rdbPool *cache.Client, registry *registry.HubReg
 		port:              port,
 		logger:            slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})),
 	}
+
+	if cfg.registry != nil {
+		cfg.registry.SetResolverDeps(cfg.userModel, cfg.visitorModel)
+	}
+
+	return cfg
 }
 
 func (app *Config) GetAllPets() (*dto.PetList, error) {
@@ -98,16 +104,16 @@ func (app *Config) Login() error {
 	return fmt.Errorf("not implemented")
 }
 
-func (app *Config) Signup(email, password string) error {
-	user, err := app.UserModel().Create(email, password)
+func (app *Config) Signup(email, password, displayName string) (*model.User, error) {
+	user, err := app.UserModel().Create(email, password, displayName)
 	if err != nil {
 		app.logger.Error("failed to create user", "err", err)
-		return err
+		return nil, err
 	}
 
 	app.logger.Info("new user created", "email", email, "user_id", user.ID)
 
-	return nil
+	return user, nil
 }
 
 func (app *Config) GetUserIDFromToken(token string) (string, error) {

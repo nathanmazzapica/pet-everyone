@@ -5,10 +5,11 @@ import (
 )
 
 type ChatService struct {
+	resolver DisplayNameResolver
 }
 
-func NewChatService() *ChatService {
-	return &ChatService{}
+func NewChatService(resolver DisplayNameResolver) *ChatService {
+	return &ChatService{resolver: resolver}
 }
 
 func moderate(msg string) string {
@@ -21,11 +22,17 @@ type ChatMessage struct {
 	Author string
 }
 
-func (c *ChatService) ProcessMessage(msg string, userID string) (ChatMessage, error) {
+func (c *ChatService) ProcessMessage(msg string, actor Actor) (ChatMessage, error) {
 	msg = moderate(msg)
-	log.Println("Processing message:", msg)
+
+	author, err := c.resolver.Resolve(actor)
+	if err != nil {
+		log.Println("failed to resolve display name:", err)
+		author = "Unknown"
+	}
+
 	return ChatMessage{
 		Msg:    msg,
-		Author: userID,
+		Author: author,
 	}, nil
 }

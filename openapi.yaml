@@ -60,7 +60,12 @@ components:
           format: email
         password:
           type: string
-      required: [email, password]
+        display_name:
+          type: string
+          maxLength: 20
+          pattern: '^[A-Za-z0-9_]{1,20}$'
+          description: Unique display name (case-insensitive); letters, digits, underscores only
+      required: [email, password, display_name]
     SignupResponse:
       type: object
       properties:
@@ -75,6 +80,23 @@ components:
         message:
           type: string
           example: "logged out"
+    DisplayNameResponse:
+      type: object
+      properties:
+        display_name:
+          type: string
+          maxLength: 20
+          pattern: '^[A-Za-z0-9_]{1,20}$'
+      required: [display_name]
+    SetDisplayNameRequest:
+      type: object
+      properties:
+        display_name:
+          type: string
+          maxLength: 20
+          pattern: '^[A-Za-z0-9_]{1,20}$'
+          description: Unique display name; letters, digits, underscores only
+      required: [display_name]
     GuestRecoverRequest:
       type: object
       properties:
@@ -123,6 +145,11 @@ components:
         email:
           type: string
           format: email
+        display_name:
+          type: string
+          maxLength: 20
+          pattern: '^[A-Za-z0-9_]{1,20}$'
+          description: Unique display name (case-insensitive); letters, digits, underscores only
         created_at:
           type: string
           format: date-time
@@ -227,6 +254,73 @@ paths:
                 $ref: '#/components/schemas/LogoutResponse'
         '401':
           description: Not authenticated (if enforced)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/display-name:
+    get:
+      summary: Retrieve current display name (user or guest)
+      security:
+        - SessionCookie: []
+        - GuestCookie: []
+      responses:
+        '200':
+          description: Display name resolved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisplayNameResponse'
+        '401':
+          description: Missing or invalid authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      summary: Set display name (registered users)
+      security:
+        - SessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetDisplayNameRequest'
+      responses:
+        '200':
+          description: Display name updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisplayNameResponse'
+        '400':
+          description: Invalid display name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Display name already in use
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
           content:
             application/json:
               schema:

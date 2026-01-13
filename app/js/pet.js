@@ -10,6 +10,7 @@ const chatSend = document.getElementById('chat-send');
 let globalCount = 1000;
 // personalCount tracks the user's personal pet count
 let personalCount = 0;
+let myDisplayName = 'You';
 
 function getCount() {
     return globalCount;
@@ -97,7 +98,7 @@ function handleSocketMessage(rawData) {
             break;
         case 'chat': {
             const msgData = event.data;
-            if (msgData) appendChatMessage(msgData.author, msgData.msg);
+            if (msgData) appendChatMessage(msgData.author, msgData.msg, msgData.author === myDisplayName);
             break;
         }
         default:
@@ -129,12 +130,12 @@ if (petContainer) {
 }
 
 // Chat UI
-function appendChatMessage(user, msg) {
+function appendChatMessage(user, msg, isSelf = false) {
     if (!chatMessages) return;
     const msgEl = document.createElement('div');
     msgEl.innerText = `${user}: ${msg}`;
     msgEl.classList.add('message');
-    msgEl.classList.add(user === 'You' ? 'me' : 'them');
+    msgEl.classList.add(isSelf || user === myDisplayName ? 'me' : 'them');
     chatMessages.appendChild(msgEl);
 }
 
@@ -144,7 +145,7 @@ function sendChat() {
     if (!msg) return;
 
     // optimistic rendering
-    appendChatMessage('You', msg);
+    appendChatMessage(myDisplayName, msg, true);
 
     const msgData = {
         type: 'chat',
@@ -169,11 +170,12 @@ if (chatInput) {
 
 function setGradientPosition(dog = 'daisy') {
     if (!petContainer) return;
-    const rect = petContainer.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    document.body.style.background = `radial-gradient(circle at ${centerX}px ${centerY}px, var(--${dog}-gradient-start) 1%, var(--${dog}-gradient-end) 100%`;
+	const rect = petContainer.getBoundingClientRect();
+	const centerX = rect.left + rect.width / 2;
+	const centerY = rect.top + rect.height / 2;
+	document.body.style.background = `radial-gradient(circle at ${centerX}px ${centerY}px, var(--${dog}-gradient-start) 1%, var(--${dog}-gradient-end) 100%)`;
 }
+
 
 async function fetchPersonalCount(petId) {
     if (!petId) return;
@@ -195,9 +197,29 @@ async function fetchPersonalCount(petId) {
     }
 }
 
+async function fetchDisplayName() {
+    try {
+        const res = await fetch('/api/display-name', {
+            method: 'GET',
+            credentials: 'include',
+        });
+        if (!res.ok) {
+            console.warn('Failed to fetch display name', res.status);
+            return;
+        }
+        const data = await res.json();
+        if (data && typeof data.display_name === 'string') {
+            myDisplayName = data.display_name;
+        }
+    } catch (err) {
+        console.error('Error fetching display name', err);
+    }
+}
+
 // Initialize
 (async () => {
     const pid = typeof pet_id !== 'undefined' ? pet_id : null;
+    await fetchDisplayName();
     if (pid) {
         await fetchPersonalCount(pid);
     }

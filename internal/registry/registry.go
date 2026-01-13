@@ -12,9 +12,11 @@ import (
 )
 
 type HubRegistry struct {
-	mu       sync.RWMutex
-	Hubs     map[string]*websocket.Hub
-	petModel *model.PetModel
+	mu           sync.RWMutex
+	Hubs         map[string]*websocket.Hub
+	petModel     *model.PetModel
+	userModel    *model.UserModel
+	visitorModel *model.VisitorModel
 }
 
 func NewHubRegistry(petModel *model.PetModel) *HubRegistry {
@@ -23,6 +25,14 @@ func NewHubRegistry(petModel *model.PetModel) *HubRegistry {
 		Hubs:     make(map[string]*websocket.Hub),
 		petModel: petModel,
 	}
+}
+
+// SetResolverDeps injects user and visitor models for display-name resolution.
+func (h *HubRegistry) SetResolverDeps(userModel *model.UserModel, visitorModel *model.VisitorModel) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.userModel = userModel
+	h.visitorModel = visitorModel
 }
 
 // GetOrCreateHub retrieves an existing Hub by ID or creates and initializes a new one if it doesn't exist.
@@ -57,10 +67,16 @@ func (h *HubRegistry) GetOrCreateHub(id string) (*websocket.Hub, bool) {
 func (h *HubRegistry) initializeHub(id string) *websocket.Hub {
 	ctx, cancel := context.WithCancel(context.Background())
 
+	if h.userModel == nil || h.visitorModel == nil {
+		log.Panic("hub registry resolver dependencies not set")
+	}
+
 	petService := service.NewPetService(ctx, id, h.petModel)
-	chatService := service.NewChatService()
+	resolver := service.NewDisplayNameResolver(h.userModel, h.visitorModel, service.DisplayNameResolverConfig{})
+	chatService := service.NewChatService(resolver)
 
 	router := transport.NewRouter(petService, chatService)
+
 	go router.Route(ctx)
 
 	// 30 second delay before shutting down after last client disconnects

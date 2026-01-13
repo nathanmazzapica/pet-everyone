@@ -92,7 +92,7 @@ func (r *Router) Route(ctx context.Context) {
 					continue
 				}
 
-				chatMsg, err := r.chatService.ProcessMessage(msg, env.Sender)
+				chatMsg, err := r.chatService.ProcessMessage(msg, service.Actor{ID: env.Sender, IsGuest: env.IsGuest})
 				if err != nil {
 					log.Println("error processing chat message:", err)
 					continue
