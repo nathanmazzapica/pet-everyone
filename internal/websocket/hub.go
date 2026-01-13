@@ -44,7 +44,6 @@ func (h *Hub) Run() {
 		case client := <-h.register:
 			h.mu.Lock()
 			h.clients[client] = true
-			h.mu.Unlock()
 
 			log.Printf("[HUB %s]: REGISTERED NEW CLIENT {%s}", h.id, client.UserID)
 
@@ -55,6 +54,7 @@ func (h *Hub) Run() {
 				}
 				h.shutdownTimer = nil
 			}
+			h.mu.Unlock()
 
 		case client := <-h.unregister:
 			h.mu.Lock()

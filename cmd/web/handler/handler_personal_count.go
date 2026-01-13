@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"pet-everyone/cmd/web/application"
-	"pet-everyone/internal/data/model"
 
 	"github.com/google/uuid"
 )
@@ -77,7 +76,7 @@ func resolvePersonalCount(r *http.Request, app *application.Config, petID string
 		return 0, errInvalidIdentity
 	}
 
-	visitorModel := &model.VisitorModel{DB: app.PetModel().DB}
+	visitorModel := app.VisitorModel()
 	count, qerr := visitorModel.GetPetCountByPetID(&guestUUID, &petID)
 	return count, qerr
 }

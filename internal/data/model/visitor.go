@@ -84,5 +84,5 @@ func (m *VisitorModel) GetPetCountByPetID(guestID *uuid.UUID, petID *string) (in
 	if err != nil {
 		return 0, err
 	}
-	return count, err
+	return count, nil
 }

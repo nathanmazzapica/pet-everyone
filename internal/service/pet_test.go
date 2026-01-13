@@ -24,3 +24,29 @@ func TestFlushBuffer(t *testing.T) {
 
 	t.Log("Success!")
 }
+
+func TestFlushBufferAddsToPendingOnFailure(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	mock := &SaboteurDatabase{ShouldFail: true}
+	svc := NewPetService(ctx, "pet-1", mock)
+	cancel()
+
+	actor := actorKey{id: "user-1", isGuest: false}
+
+	svc.mu.Lock()
+	svc.pendingUpdates = map[actorKey]uint64{actor: 3}
+	svc.dbQueue[actor] = 2
+	svc.mu.Unlock()
+
+	svc.flushBuffer()
+
+	svc.mu.RLock()
+	pending := svc.pendingUpdates[actor]
+	svc.mu.RUnlock()
+
+	if pending != 5 {
+		t.Fatalf("expected pending updates to total 5, got %d", pending)
+	}
+}

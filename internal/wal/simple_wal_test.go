@@ -8,16 +8,45 @@ import (
 	"github.com/google/uuid"
 )
 
-func TestNewSimpleWAL(t *testing.T) {
-	WAL, err := NewPetCountWAL("test-pet")
+func newTestWAL(t *testing.T) *PetCountWAL {
+	t.Helper()
+
+	tmpDir := t.TempDir()
+
+	cwd, err := os.Getwd()
 	if err != nil {
-		t.Error(err)
+		t.Fatalf("getwd: %v", err)
 	}
-	os.Remove(WAL.filename)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("chdir to temp dir: %v", err)
+	}
+
+	wal, err := NewPetCountWAL("test-pet")
+	if err != nil {
+		t.Fatalf("create WAL: %v", err)
+	}
+
+	t.Cleanup(func() {
+		wal.Close()
+		if err := os.Chdir(cwd); err != nil {
+			t.Fatalf("restore cwd: %v", err)
+		}
+	})
+
+	return wal
+}
+
+func TestNewSimpleWAL(t *testing.T) {
+	WAL := newTestWAL(t)
+
+	if WAL == nil {
+		t.Fatal("expected WAL instance")
+	}
 }
 
 func TestSimpleWAL_WriteEntry(t *testing.T) {
-	WAL, _ := NewPetCountWAL("test-pet")
+	WAL := newTestWAL(t)
 
 	entries := dummyData()
 
@@ -27,7 +56,6 @@ func TestSimpleWAL_WriteEntry(t *testing.T) {
 			t.Error(err)
 		}
 	}
-	os.Remove(WAL.filename)
 }
 
 func dummyData() map[string]uint64 {
@@ -42,16 +70,15 @@ func dummyData() map[string]uint64 {
 }
 
 func TestSimpleWAL_Recover(t *testing.T) {
-	WAL, _ := NewPetCountWAL("test-pet")
+	WAL := newTestWAL(t)
 
 	for id, count := range dummyData() {
-		WAL.WriteEntry(id, count)
+		if err := WAL.WriteEntry(id, count); err != nil {
+			t.Fatal(err)
+		}
 	}
 
-	_, err := WAL.Recover()
-	if err != nil {
+	if _, err := WAL.Recover(); err != nil {
 		t.Error(err)
 	}
-	os.Remove(WAL.filename)
-	WAL.Close()
 }
