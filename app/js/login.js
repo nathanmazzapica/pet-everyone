@@ -29,12 +29,10 @@ async function login() {
 		data = await res.json();
 		console.log(data);
 
-		if (data.token) {
-			localStorage.setItem("token", data.token);
-			alert("You have been logged in!");
-			window.location.href = "/";
-		} else {
-			console.error("Token not found in response");
-		}
+		// Session is now cookie-based; no token storage needed.
+		alert("You have been logged in!");
+		window.location.href = "/";
+	} else {
+		console.error("Login failed", await res.text());
 	}
 }

@@ -22,5 +22,9 @@ async function signup() {
 	if (res.ok) {
 		data = await res.json();
 		console.log(data);
+		// Session cookie is set by the server; redirect to home
+		window.location.href = "/";
+	} else {
+		console.error("Signup failed", await res.text());
 	}
 }

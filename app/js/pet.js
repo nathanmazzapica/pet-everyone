@@ -51,9 +51,9 @@ function safeParseJSON(text) {
 // WEBSOCKET HELPERS
 function createWebSocket(petId) {
 	if (!petId) return null;
-	// TODO: implement fallback for guest users
-	const token = localStorage.getItem('token');
-	const url = `ws://localhost:8082/pet/${petId}/ws?token=${token}`;
+
+	const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+	const url = `${wsProtocol}://${window.location.host}/pet/${petId}/ws`;
 	const s = new WebSocket(url);
 
 	s.onopen = () => {
