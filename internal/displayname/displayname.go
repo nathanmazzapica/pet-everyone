@@ -21,8 +21,24 @@ var (
 
 	allowedPattern = regexp.MustCompile(`^[A-Za-z0-9_]+$`)
 
-	adjectives = []string{"brave", "calm", "swift", "bright", "happy", "kind", "quick", "sharp", "sunny", "lucky"}
-	nouns      = []string{"Fox", "Cat", "Dog", "Hawk", "Panda", "Goat", "Wolf", "Lynx", "Seal", "Crab"}
+	adjectives = []string{"big", "long", "small", "golden", "yellow", "black",
+		"red", "short", "cunning", "silly", "radical", "sluggish",
+		"speedy", "humorous", "shy", "scared", "brave", "intelligent", "stupid",
+		"orange", "medium", "austere", "gaudy", "ugly", "beautiful",
+		"intellectual", "philosophical", "charged", "empty", "full",
+		"serious", "vengeful", "malignant", "generous", "complacent",
+		"ambitious", "lazy", "dull", "sharp", "splendid", "pretty", "cute",
+		"loving", "hateful", "spiteful", "rude", "polite", "dastardly", "depressed",
+		"oafish", "green", "teal", "purple", "horrible", "amazing"}
+
+	nouns = []string{"Dog", "Watermelon", "Crusader", "Lancer", "Envisage", "Frog",
+		"Beetle", "Cellphone", "Python", "Lizard", "Butterfly", "Dragon",
+		"Automobile", "Cow", "Henry", "Levi", "Array", "Buzzer", "Balloon", "Book",
+		"Calendar", "Burrito", "Corgi", "Pencil", "Pen", "Marker", "Bookshelf",
+		"Sharpener", "Can", "Lightbulb", "Flower", "Daisy", "Eraser", "Battery",
+		"Butter", "Cantaloupe", "Fridge", "Computer", "Programmer", "Kitty", "Barbell", "Bottle",
+		"Toad", "Beryllium", "Consumer", "President", "Orange", "Entity", "Aspect",
+		"Bee"}
 )
 
 // Generate returns a display name in the format adjective + Noun + 4-digit number.
