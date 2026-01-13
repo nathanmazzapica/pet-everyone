@@ -28,7 +28,7 @@ type Config struct {
 func NewConfig(pool *db.Client, rdbPool *cache.Client, registry *registry.HubRegistry, filepathRoot string, assetsRoot string, port string) *Config {
 	db := pool.DB()
 	rdb := rdbPool.RDB()
-	return &Config{
+	cfg := &Config{
 		petModel:          &model.PetModel{DB: db, Cache: rdb},
 		userModel:         &model.UserModel{DB: db},
 		sessionTokenModel: &model.SessionTokenModel{DB: db},
@@ -39,6 +39,12 @@ func NewConfig(pool *db.Client, rdbPool *cache.Client, registry *registry.HubReg
 		port:              port,
 		logger:            slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})),
 	}
+
+	if cfg.registry != nil {
+		cfg.registry.SetResolverDeps(cfg.userModel, cfg.visitorModel)
+	}
+
+	return cfg
 }
 
 func (app *Config) GetAllPets() (*dto.PetList, error) {
