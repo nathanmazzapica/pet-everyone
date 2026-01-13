@@ -8,7 +8,7 @@ type SaboteurDatabase struct {
 	ShouldFail bool
 }
 
-func (s *SaboteurDatabase) GetPetCount(id *string) (int, error) {
+func (s *SaboteurDatabase) GetPetCount(id *string) (int64, error) {
 	return 0, nil
 }
 

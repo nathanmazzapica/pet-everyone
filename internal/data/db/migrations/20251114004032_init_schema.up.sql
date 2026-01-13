@@ -42,7 +42,7 @@ CREATE TABLE Pet (
 CREATE TABLE UserPetsClickCount
 (
     id SERIAL PRIMARY KEY NOT NULL,
-    click_count INT default 0,
+    click_count BIGINT default 0,
     pet_id      UUID NOT NULL,
     user_id     UUID,
     guest_id    UUID,

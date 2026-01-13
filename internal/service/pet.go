@@ -10,7 +10,7 @@ import (
 )
 
 type PetDatabase interface {
-	GetPetCount(id *string) (int, error)
+	GetPetCount(id *string) (int64, error)
 	UpdatePetCount(petID string, userID string, count uint64) error
 }
 

@@ -99,11 +99,11 @@ func (u *UserModel) GetByEmail(email string) (*User, error) {
 	return &user, err
 }
 
-func GetPetCountByPetID(db *sql.DB, id *uuid.UUID, petID *string) (int, error) {
+func GetPetCountByPetID(db *sql.DB, id *uuid.UUID, petID *string) (int64, error) {
 	query := `SELECT COALESCE(SUM(click_count), 0) FROM UserPetsClickCount WHERE pet_id = $1 AND user_id = $2;`
 	row := db.QueryRow(query, petID, id)
 
-	var count int
+	var count int64
 	err := row.Scan(&count)
 	if err != nil {
 		return 0, err
