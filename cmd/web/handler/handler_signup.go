@@ -55,6 +55,12 @@ func handleSignup(app *application.Config) http.Handler {
 		// TODO: fetch created user/profile, persist session token with user ID
 		token := auth.GenerateSessionToken()
 
+		err = app.SessionTokenModel().Save(token, user.ID.String(), time.Now().UTC().Add(time.Hour*24*30))
+		if err != nil {
+			app.RespondWithError(w, http.StatusInternalServerError, "Unable to save session token", err)
+			return
+		}
+
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_token",
 			Value:    token,
