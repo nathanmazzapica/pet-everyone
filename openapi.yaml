@@ -399,3 +399,53 @@ paths:
       description: |
         Requires cookies for identity. Prefers `session_token`; otherwise `guest_id`.
         No query-string tokens. CORS/origin checks enforced server-side.
+
+  /api/pet/{pet_id}/count:
+    get:
+      summary: Get caller's personal pet count
+      parameters:
+        - name: pet_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Personal count for the caller (user or guest)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pet_id:
+                    type: string
+                  personal_count:
+                    type: integer
+                    format: int64
+                required: [pet_id, personal_count]
+        '400':
+          description: Invalid pet_id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing or invalid identity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Pet not found (optional)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      description: |
+        Returns the caller's personal click count for the given pet. Uses `session_token` for users or `guest_id` for guests; if no record exists, returns 0.
