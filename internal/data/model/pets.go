@@ -104,7 +104,7 @@ func (p *PetModel) UpdatePetCountUser(petID string, userID string, count uint64)
 func (p *PetModel) UpdatePetCountGuest(petID string, guestID string, count uint64) error {
 	query := `INSERT INTO UserPetsClickCount (pet_id, guest_id, click_count)
 			 VALUES ($1, $2, $3)
-			 ON CONFLICT (pet_id, guest_id)
+			 ON CONFLICT ON CONSTRAINT pet_id_guest_id_unique
 			 DO UPDATE SET click_count = UserPetsClickCount.click_count + $3;`
 	_, err := p.DB.Exec(query, petID, guestID, count)
 	return err
