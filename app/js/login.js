@@ -1,18 +1,3 @@
-if (localStorage.getItem("token")) {
-	alert("You are already logged in");
-	window.location.href = "/";
-}
-
-
-const loginButton = document.getElementById("login-button");
-const emailInput = document.getElementById("email-input");
-const passwordInput = document.getElementById("password-input");
-
-loginButton.addEventListener("click", async (e) => {
-	e.preventDefault();
-	await login();
-});
-
 async function login() {
 	const email = emailInput.value;
 	const password = passwordInput.value;
@@ -36,3 +21,12 @@ async function login() {
 		console.error("Login failed", await res.text());
 	}
 }
+
+const loginButton = document.getElementById("login-button");
+const emailInput = document.getElementById("email-input");
+const passwordInput = document.getElementById("password-input");
+
+loginButton.addEventListener("click", async (e) => {
+	e.preventDefault();
+	await login();
+});
