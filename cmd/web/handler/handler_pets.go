@@ -43,15 +43,27 @@ func servePetWebsocket(app *application.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		petID := r.PathValue("pet_id")
 
-		// TODO: resolve identity from cookies (session_token preferred, guest_id allowed) and populate user/guest ID
-		// Temporarily reject when session_token is missing; guest support will be wired later.
-		if _, err := r.Cookie("session_token"); err != nil {
-			app.RespondWithError(w, http.StatusUnauthorized, "missing authentication", err)
-			return
+		// Resolve identity via cookies (session preferred, guest allowed). Validation is handled here for now.
+		var userID string
+
+		if sessCookie, err := r.Cookie("session_token"); err == nil {
+			sess, serr := app.SessionTokenModel().Get(sessCookie.Value)
+			if serr == nil && !sess.IsExpired() {
+				userID = sess.UserID
+			}
 		}
 
-		// TODO: fetch validated userID/guestID from auth layer/context
-		userID := ""
+		if userID == "" {
+			if guestCookie, err := r.Cookie("guest_id"); err == nil {
+				// TODO: validate guest exists before allowing WS access
+				userID = guestCookie.Value
+			}
+		}
+
+		if userID == "" {
+			app.RespondWithError(w, http.StatusUnauthorized, "missing authentication", nil)
+			return
+		}
 
 		hub, _ := app.GetRegistry().GetOrCreateHub(petID)
 		websocket.ServeWs(hub, userID, w, r)

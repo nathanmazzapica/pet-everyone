@@ -8,7 +8,9 @@ import (
 
 func handleLogout(app *application.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO: validate session_token, invalidate server-side session
+		if sessCookie, err := r.Cookie("session_token"); err == nil {
+			_ = app.SessionTokenModel().Delete(sessCookie.Value)
+		}
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_token",

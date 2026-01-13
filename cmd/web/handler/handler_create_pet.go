@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"pet-everyone/cmd/web/application"
+	"pet-everyone/cmd/web/middleware"
 )
 
 func handleCreatePet(app *application.Config) http.Handler {
@@ -13,7 +14,15 @@ func handleCreatePet(app *application.Config) http.Handler {
 			return
 		}
 
-		// TODO: enforce registered-user-only via identity in context; return 403 for guests
+		if id, ok := middleware.IdentityFromContext(r.Context()); ok {
+			if id.IsGuest {
+				app.RespondWithError(w, http.StatusForbidden, "guests cannot create pets", nil)
+				return
+			}
+		} else {
+			app.RespondWithError(w, http.StatusUnauthorized, "missing identity", nil)
+			return
+		}
 
 		const maxMemory = 10 << 20
 
