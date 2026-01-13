@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
-	"github.com/google/uuid"
 )
 
 type WAL interface {
@@ -95,13 +93,6 @@ func (w *PetCountWAL) Recover() (map[string]uint64, error) {
 		}
 
 		userID := parts[0]
-
-		// check for invalid uuid and skip them
-		_, err := uuid.Parse(userID)
-		if err != nil {
-			log.Printf("discarding malformed WAL entry: %s\nerr:%s", line, ErrMalformedUUID)
-			continue
-		}
 
 		count, err := strconv.ParseUint(parts[1], 10, 64)
 		if err != nil {

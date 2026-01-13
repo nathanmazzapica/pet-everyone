@@ -27,14 +27,14 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func ServeWs(hub *Hub, userID string, w http.ResponseWriter, r *http.Request) {
+func ServeWs(hub *Hub, userID string, isGuest bool, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), UserID: userID}
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), UserID: userID, IsGuest: isGuest}
 	client.hub.register <- client
 
 	go client.writePump()

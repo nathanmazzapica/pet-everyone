@@ -60,9 +60,11 @@ func servePetWebsocket(app *application.Config) http.Handler {
 			}
 		}
 
+		isGuest := false
 		if userID == "" {
 			// Allow guests; ensure guest cookie exists before upgrade
 			userID = ensureGuestCookie(w, r)
+			isGuest = true
 		}
 
 		if userID == "" {
@@ -71,7 +73,7 @@ func servePetWebsocket(app *application.Config) http.Handler {
 		}
 
 		hub, _ := app.GetRegistry().GetOrCreateHub(petID)
-		websocket.ServeWs(hub, userID, w, r)
+		websocket.ServeWs(hub, userID, isGuest, w, r)
 		app.Logger().Info("Websocket connection established", "pet_id", petID)
 	})
 }

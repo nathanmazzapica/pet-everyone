@@ -22,7 +22,8 @@ type Client struct {
 	// Buffered channel of outbound messages.
 	send chan []byte
 
-	UserID string
+	UserID  string
+	IsGuest bool
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -50,7 +51,7 @@ func (c *Client) readPump() {
 			break
 		}
 		log.Printf("recv: %s\n", message)
-		env := transport.Envelope{Sender: c.UserID, Data: message}
+		env := transport.Envelope{Sender: c.UserID, IsGuest: c.IsGuest, Data: message}
 		c.hub.commands <- env
 	}
 }

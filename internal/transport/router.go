@@ -10,8 +10,9 @@ import (
 // router takes in commands and routes them to the appropriate service
 
 type Envelope struct {
-	Sender string
-	Data   []byte
+	Sender  string
+	IsGuest bool
+	Data    []byte
 }
 
 type Command struct {
@@ -54,7 +55,10 @@ func (r *Router) Route(ctx context.Context) {
 
 			switch cmd.Type {
 			case "pet":
-				err := r.petService.IncrementPetCount(env.Sender)
+				err := r.petService.IncrementPetCount(service.Actor{
+					ID:      env.Sender,
+					IsGuest: env.IsGuest,
+				})
 				if err != nil {
 					log.Println("error incrementing pet count:", err)
 					continue
