@@ -15,6 +15,7 @@ type PetDatabase interface {
 	UpdatePetCountGuest(petID string, guestID string, count uint64) error
 }
 
+// Actor stores a UUID and a flag stating whether it belongs to a Guest or a Registered User
 type Actor struct {
 	ID      string
 	IsGuest bool
