@@ -28,7 +28,7 @@ func handleLogin(app *application.Config) http.Handler {
 
 		type response struct {
 			model.User
-			Token string `json:"token"`
+			Message string `json:"message"`
 		}
 
 		decoder := json.NewDecoder(r.Body)
@@ -69,6 +69,16 @@ func handleLogin(app *application.Config) http.Handler {
 			return
 		}
 
-		app.RespondWithJSON(w, http.StatusOK, response{User: *user, Token: token})
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_token",
+			Value:    token,
+			Path:     "/",
+			Expires:  time.Now().UTC().Add(30 * 24 * time.Hour),
+			HttpOnly: true,
+			Secure:   false, // TODO: set true in production
+			SameSite: http.SameSiteLaxMode,
+		})
+
+		app.RespondWithJSON(w, http.StatusOK, response{User: *user, Message: "login successful"})
 	})
 }

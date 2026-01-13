@@ -42,20 +42,16 @@ func handlePetConnect(app *application.Config) http.Handler {
 func servePetWebsocket(app *application.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		petID := r.PathValue("pet_id")
-		url := r.URL
-		query := url.Query()
 
-		token := query.Get("token")
-		if token == "" {
-			app.RespondWithError(w, 400, "missing user_id query param", nil)
+		// TODO: resolve identity from cookies (session_token preferred, guest_id allowed) and populate user/guest ID
+		// Temporarily reject when session_token is missing; guest support will be wired later.
+		if _, err := r.Cookie("session_token"); err != nil {
+			app.RespondWithError(w, http.StatusUnauthorized, "missing authentication", err)
 			return
 		}
 
-		userID, err := app.GetUserIDFromToken(token)
-		if err != nil {
-			app.RespondWithError(w, 401, "invalid token", err)
-			return
-		}
+		// TODO: fetch validated userID/guestID from auth layer/context
+		userID := ""
 
 		hub, _ := app.GetRegistry().GetOrCreateHub(petID)
 		websocket.ServeWs(hub, userID, w, r)

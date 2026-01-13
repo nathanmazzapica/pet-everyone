@@ -13,6 +13,8 @@ func handleCreatePet(app *application.Config) http.Handler {
 			return
 		}
 
+		// TODO: enforce registered-user-only via identity in context; return 403 for guests
+
 		const maxMemory = 10 << 20
 
 		err := r.ParseMultipartForm(maxMemory)

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"pet-everyone/cmd/web/application"
+	"pet-everyone/internal/auth"
+	"time"
 )
 
 func serveSignup(app *application.Config) http.Handler {
@@ -37,13 +39,25 @@ func handleSignup(app *application.Config) http.Handler {
 			return
 		}
 
-		// temp
+		// TODO: fetch created user/profile, persist session token with user ID
+		token := auth.GenerateSessionToken()
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_token",
+			Value:    token,
+			Path:     "/",
+			Expires:  time.Now().UTC().Add(30 * 24 * time.Hour),
+			HttpOnly: true,
+			Secure:   false, // TODO: set true in production
+			SameSite: http.SameSiteLaxMode,
+		})
+
 		type successResponse struct {
 			Message string `json:"message"`
 		}
 
 		app.RespondWithJSON(w, http.StatusCreated, successResponse{
-			Message: "Successfully created user",
+			Message: "user created",
 		})
 
 	})

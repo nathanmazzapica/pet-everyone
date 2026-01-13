@@ -36,6 +36,8 @@ func Routes(app *application.Config) *http.ServeMux {
 
 	mux.Handle("POST /api/login", handleLogin(app))
 	mux.Handle("POST /api/signup", handleSignup(app))
+	mux.Handle("POST /api/logout", handleLogout(app))
+	mux.Handle("POST /api/guest/recover", handleGuestRecover(app))
 	mux.Handle("POST /api/create", authMiddleware(handleCreatePet(app)))
 
 	return mux
