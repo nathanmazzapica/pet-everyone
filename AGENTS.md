@@ -143,6 +143,9 @@ This file guides agentic coding assistants working in the `pet-everyone` reposit
 - Keep commits scoped and conventional (`feat:`, `fix:`, `refactor:`, etc.).
 - Avoid force pushes to shared branches unless explicitly requested.
 
+## Skills
+- Additional internal scripts are documented under `skills/`; prefer using documented commands there (e.g., DSN generator) when relevant.
+
 ## Cursor / Copilot Rules
 - No additional Cursor or Copilot repo rules are present; follow this AGENTS file for guidance.
 
