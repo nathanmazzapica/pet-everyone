@@ -39,6 +39,7 @@ func Routes(app *application.Config) *http.ServeMux {
 	mux.Handle("POST /api/logout", handleLogout(app))
 	mux.Handle("POST /api/guest/recover", handleGuestRecover(app))
 	mux.Handle("POST /api/create", authMiddleware(handleCreatePet(app)))
+	mux.Handle("GET /api/pet/{pet_id}/count", handlePersonalPetCount(app))
 
 	return mux
 }
