@@ -175,8 +175,35 @@ function setGradientPosition(dog = 'daisy') {
 	document.body.style.background = `radial-gradient(circle at ${centerX}px ${centerY}px, var(--${dog}-gradient-start) 1%, var(--${dog}-gradient-end) 100%`;
 }
 
-// Initialize
-updateCountUI();
-setGradientPosition();
+async function fetchPersonalCount(petId) {
+	if (!petId) return;
+	try {
+		const res = await fetch(`/api/pet/${petId}/count`, {
+			method: 'GET',
+			credentials: 'include',
+		});
+		if (!res.ok) {
+			console.warn('Failed to fetch personal count', res.status);
+			return;
+		}
+		const data = await res.json();
+		if (typeof data.personal_count === 'number') {
+			setPersonalCount(Number(data.personal_count));
+		}
+	} catch (err) {
+		console.error('Error fetching personal count', err);
+	}
+}
 
-socket = createWebSocket(typeof pet_id !== 'undefined' ? pet_id : null);
+// Initialize
+(async () => {
+	const pid = typeof pet_id !== 'undefined' ? pet_id : null;
+	if (pid) {
+		await fetchPersonalCount(pid);
+	}
+	updateCountUI();
+	setGradientPosition();
+	if (pid) {
+		socket = createWebSocket(pid);
+	}
+})();
