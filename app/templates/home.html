@@ -2,7 +2,8 @@
 
 {{ define "content" }}
     {{ $numPets := len .Pets }}
-    <h1 style="text-align: center;">Welcome to our Zoo of {{ $numPets }} Pets</h1>
+    <h1 id="welcome-header" style="text-align: center;">Welcome</h1>
+    <p style="text-align: center;">Our Zoo of {{ $numPets }} Pets</p>
         <div id="pet-card-container">
             <div class="card-container">
                 {{ range .Pets }}
