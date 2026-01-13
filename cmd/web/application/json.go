@@ -14,10 +14,12 @@ func (app *Config) RespondWithError(w http.ResponseWriter, code int, msg string,
 		app.logger.Error("Responding with 5XX error:", "message", msg)
 	}
 	type errorResponse struct {
-		Error string `json:"error"`
+		Message string `json:"message"`
+		Error   error  `json:"error"`
 	}
 	app.RespondWithJSON(w, code, errorResponse{
-		Error: msg,
+		Message: msg,
+		Error:   err,
 	})
 }
 
