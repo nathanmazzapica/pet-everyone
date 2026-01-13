@@ -13,7 +13,7 @@ import (
 
 func serveHome(app *application.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ensureGuestCookie(w, r)
+		ensureGuestCookie(app, w, r)
 
 		data, err := app.GetAllPets()
 		if err != nil {
@@ -33,7 +33,7 @@ func handlePetConnect(app *application.Config) http.Handler {
 		petID := r.PathValue("pet_id")
 		log.Println("Handling connection for pet{", petID, "}")
 
-		ensureGuestCookie(w, r)
+		ensureGuestCookie(app, w, r)
 
 		petData, err := app.GetPetData(petID)
 		if err != nil {
@@ -63,7 +63,7 @@ func servePetWebsocket(app *application.Config) http.Handler {
 		isGuest := false
 		if userID == "" {
 			// Allow guests; ensure guest cookie exists before upgrade
-			userID = ensureGuestCookie(w, r)
+			userID = ensureGuestCookie(app, w, r)
 			isGuest = true
 		}
 
@@ -78,12 +78,17 @@ func servePetWebsocket(app *application.Config) http.Handler {
 	})
 }
 
-func ensureGuestCookie(w http.ResponseWriter, r *http.Request) string {
+func ensureGuestCookie(app *application.Config, w http.ResponseWriter, r *http.Request) string {
 	if c, err := r.Cookie("guest_id"); err == nil && c.Value != "" {
-		return c.Value
+		// Validate existing guest; if missing, issue a new one
+		if _, err := app.VisitorModel().Get(uuid.MustParse(c.Value)); err == nil {
+			return c.Value
+		}
 	}
 
 	guestID := uuid.New().String()
+	_, _ = app.VisitorModel().Upsert(uuid.MustParse(guestID))
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "guest_id",
 		Value:    guestID,
