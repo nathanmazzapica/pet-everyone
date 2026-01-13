@@ -1,14 +1,18 @@
 {{ define "title" }}Pet Everyone{{ end }}
 
 {{ define "content" }}
-    <h1>Login</h1>
     <div id="login-form-container">
         <form id="login-form">
+            <h1>Login</h1>
             <label for="email-input">Email</label>
             <input type="email" id="email-input" required/>
             <label for="password-input">Password</label>
-            <input type="password" id="password-input" required/>
+            <input type="password" minlength="8" max="32" id="password-input" required/>
             <button type="submit" id="login-button">Login</button>
+            <div class="auth-switch">
+                <span>New here?</span>
+                <a href="/app/signup">Create account</a>
+            </div>
         </form>
     </div>
     <script src="/app/js/login.js"></script>
