@@ -107,15 +107,16 @@ func (w *PetCountWAL) Recover() (map[string]uint64, error) {
 // Close closes the WAL file. Errors are logged, but the WAL file is always closed.
 func (w *PetCountWAL) Close() {
 	// ensure all writes are flushed to disk
-	defer w.file.Close()
-	err := w.file.Sync()
-	if err != nil {
+	if err := w.file.Sync(); err != nil {
 		log.Println("failed to sync WAL file:", err)
 	}
 
+	if err := w.file.Close(); err != nil {
+		log.Println("error while closing WAL:", err)
+	}
+
 	if w.writes == 0 {
-		err = os.Remove(w.filename)
-		if err != nil {
+		if err := os.Remove(w.filename); err != nil {
 			log.Println("failed to remove empty WAL file:", err)
 		}
 	}
