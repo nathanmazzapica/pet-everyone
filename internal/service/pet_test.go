@@ -11,7 +11,7 @@ func TestFlushBuffer(t *testing.T) {
 	testService := NewPetService(context.Background(), "1", mock)
 	for i := 0; i < 6000; i++ {
 		mockID := fmt.Sprintf("%d", i)
-		testService.dbQueue[mockID] = 1
+		testService.dbQueue[actorKey{id: mockID, isGuest: false}] = 1
 	}
 
 	t.Log("Flushing buffer...")

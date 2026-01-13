@@ -8,7 +8,8 @@ const chatInput = document.getElementById('chat-input');
 const chatSend = document.getElementById('chat-send');
 
 let globalCount = 1000;
-let localCount = 0;
+// personalCount tracks the user's personal pet count
+let personalCount = 0;
 
 function getCount() {
 	return globalCount;
@@ -19,18 +20,18 @@ function setCount(n) {
 	updateCountUI();
 }
 
-function getLocalCount() {
-	return localCount;
+function getPersonalCount() {
+	return personalCount;
 }
 
-function setLocalCount(n) {
-	localCount = n;
+function setPersonalCount(n) {
+	personalCount = n;
 	updateCountUI();
 }
 
 function updateCountUI() {
 	if (countEl) countEl.innerText = getCount().toLocaleString();
-	if (personalCountEl) personalCountEl.innerText = getLocalCount().toLocaleString();
+	if (personalCountEl) personalCountEl.innerText = getPersonalCount().toLocaleString();
 }
 
 function incrementCountUI() {
@@ -50,9 +51,9 @@ function safeParseJSON(text) {
 // WEBSOCKET HELPERS
 function createWebSocket(petId) {
 	if (!petId) return null;
-	// TODO: implement fallback for guest users
-	const token = localStorage.getItem('token');
-	const url = `ws://localhost:8082/pet/${petId}/ws?token=${token}`;
+
+	const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+	const url = `${wsProtocol}://${window.location.host}/pet/${petId}/ws`;
 	const s = new WebSocket(url);
 
 	s.onopen = () => {
@@ -118,7 +119,7 @@ function pet() {
 		countEl.classList.add('count-bump');
 		setTimeout(() => countEl.classList.remove('count-bump'), 320);
 	}
-	setLocalCount(getLocalCount() + 1)
+	setPersonalCount(getPersonalCount() + 1)
 	incrementCountUI();
 	sendSocketMessage(petCommand);
 }
@@ -174,8 +175,35 @@ function setGradientPosition(dog = 'daisy') {
 	document.body.style.background = `radial-gradient(circle at ${centerX}px ${centerY}px, var(--${dog}-gradient-start) 1%, var(--${dog}-gradient-end) 100%`;
 }
 
-// Initialize
-updateCountUI();
-setGradientPosition();
+async function fetchPersonalCount(petId) {
+	if (!petId) return;
+	try {
+		const res = await fetch(`/api/pet/${petId}/count`, {
+			method: 'GET',
+			credentials: 'include',
+		});
+		if (!res.ok) {
+			console.warn('Failed to fetch personal count', res.status);
+			return;
+		}
+		const data = await res.json();
+		if (typeof data.personal_count === 'number') {
+			setPersonalCount(Number(data.personal_count));
+		}
+	} catch (err) {
+		console.error('Error fetching personal count', err);
+	}
+}
 
-socket = createWebSocket(typeof pet_id !== 'undefined' ? pet_id : null);
+// Initialize
+(async () => {
+	const pid = typeof pet_id !== 'undefined' ? pet_id : null;
+	if (pid) {
+		await fetchPersonalCount(pid);
+	}
+	updateCountUI();
+	setGradientPosition();
+	if (pid) {
+		socket = createWebSocket(pid);
+	}
+})();

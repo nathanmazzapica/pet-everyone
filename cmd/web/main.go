@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +17,7 @@ import (
 )
 
 func main() {
+	startTime := time.Now()
 	err := godotenv.Load(".env")
 	if err != nil {
 		panic(err)
@@ -41,9 +43,16 @@ func main() {
 		log.Fatalf("Error connecting to db: %v", err)
 	}
 	defer client.Close()
-	log.Println("Connected to db")
+	log.Println("Connected to db in", time.Since(startTime).Round(time.Millisecond))
 
 	rdbClient := cache.Connect(cache.LoadConfig())
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := rdbClient.RDB().Ping(ctx).Err(); err != nil {
+		log.Fatalf("Error connecting to redis: %v", err)
+	}
+	defer rdbClient.Close()
+	log.Println("Connected to redis in", time.Since(startTime).Round(time.Millisecond))
 
 	app := application.NewConfig(
 		client,
@@ -66,6 +75,7 @@ func main() {
 		ReadTimeout:       10 * time.Second,
 	}
 
+	log.Println("Started server in", time.Since(startTime).Round(time.Millisecond))
 	log.Printf("Serving on http://localhost:%s/app\n", port)
 	log.Fatal(srv.ListenAndServe())
 

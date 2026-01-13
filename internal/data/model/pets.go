@@ -2,7 +2,6 @@ package model
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -66,10 +65,6 @@ func (p *PetModel) Get(id string) (*Pet, error) {
 		return nil, err
 	}
 
-	if err != nil {
-		fmt.Println("failed to store in cache")
-	}
-
 	return &pet, err
 }
 
@@ -87,11 +82,12 @@ func (p *PetModel) GetPetImage(id *string) (string, error) {
 	return imageURL, err
 }
 
-func (p *PetModel) GetPetCount(id *string) (int, error) {
-	var count int
+func (p *PetModel) GetPetCount(id *string) (int64, error) {
+	var count int64
 	query := `SELECT COALESCE(SUM(click_count), 0) FROM UserPetsClickCount WHERE pet_id = $1;`
 
 	row := p.DB.QueryRow(query, id)
+
 	err := row.Scan(&count)
 	if err != nil {
 		return -1, err
@@ -99,9 +95,18 @@ func (p *PetModel) GetPetCount(id *string) (int, error) {
 	return count, err
 }
 
-func (p *PetModel) UpdatePetCount(petID string, userID string, count uint64) error {
+func (p *PetModel) UpdatePetCountUser(petID string, userID string, count uint64) error {
 	query := `INSERT INTO UserPetsClickCount (pet_id, user_id, click_count) VALUES ($1, $2, $3) ON CONFLICT (pet_id, user_id) DO UPDATE SET click_count = UserPetsClickCount.click_count + $3;`
 	_, err := p.DB.Exec(query, petID, userID, count)
+	return err
+}
+
+func (p *PetModel) UpdatePetCountGuest(petID string, guestID string, count uint64) error {
+	query := `INSERT INTO UserPetsClickCount (pet_id, guest_id, click_count)
+			 VALUES ($1, $2, $3)
+			 ON CONFLICT ON CONSTRAINT pet_id_guest_id_unique
+			 DO UPDATE SET click_count = UserPetsClickCount.click_count + $3;`
+	_, err := p.DB.Exec(query, petID, guestID, count)
 	return err
 }
 

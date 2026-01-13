@@ -4,12 +4,23 @@ import (
 	"log"
 	"net/http"
 	"pet-everyone/cmd/web/application"
+	"pet-everyone/cmd/web/middleware"
 )
 
 func handleCreatePet(app *application.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			app.RespondWithError(w, http.StatusMethodNotAllowed, "forbidden method", nil)
+			return
+		}
+
+		if id, ok := middleware.IdentityFromContext(r.Context()); ok {
+			if id.IsGuest {
+				app.RespondWithError(w, http.StatusForbidden, "guests cannot create pets", nil)
+				return
+			}
+		} else {
+			app.RespondWithError(w, http.StatusUnauthorized, "missing identity", nil)
 			return
 		}
 

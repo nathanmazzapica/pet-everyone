@@ -1,3 +1,4 @@
+// Package wal provides simple Write Ahead Logging to preserve user counts in the event of unexpected shutdowns or failures.
 package wal
 
 import (
@@ -8,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
-	"github.com/google/uuid"
 )
 
 type WAL interface {
@@ -22,6 +21,7 @@ type PetCountWAL struct {
 	filename string
 	mu       sync.Mutex
 	file     *os.File
+	writes   int
 }
 
 type RowErr struct {
@@ -64,6 +64,8 @@ func (w *PetCountWAL) WriteEntry(userID string, count uint64) error {
 		return err
 	}
 
+	w.writes++
+
 	return nil
 }
 
@@ -92,13 +94,6 @@ func (w *PetCountWAL) Recover() (map[string]uint64, error) {
 
 		userID := parts[0]
 
-		// check for invalid uuid and skip them
-		_, err := uuid.Parse(userID)
-		if err != nil {
-			log.Printf("discarding malformed WAL entry: %s\nerr:%s", line, ErrMalformedUUID)
-			continue
-		}
-
 		count, err := strconv.ParseUint(parts[1], 10, 64)
 		if err != nil {
 			return rebuiltState, err
@@ -109,6 +104,19 @@ func (w *PetCountWAL) Recover() (map[string]uint64, error) {
 	return rebuiltState, nil
 }
 
-func (w *PetCountWAL) Close() error {
-	return w.file.Close()
+// Close closes the WAL file. Errors are logged, but the WAL file is always closed.
+func (w *PetCountWAL) Close() {
+	// ensure all writes are flushed to disk
+	defer w.file.Close()
+	err := w.file.Sync()
+	if err != nil {
+		log.Println("failed to sync WAL file:", err)
+	}
+
+	if w.writes == 0 {
+		err = os.Remove(w.filename)
+		if err != nil {
+			log.Println("failed to remove empty WAL file:", err)
+		}
+	}
 }

@@ -17,6 +17,7 @@ type Config struct {
 	petModel          *model.PetModel
 	userModel         *model.UserModel
 	sessionTokenModel *model.SessionTokenModel
+	visitorModel      *model.VisitorModel
 	registry          *registry.HubRegistry
 	filepathRoot      string
 	assetsRoot        string
@@ -31,6 +32,7 @@ func NewConfig(pool *db.Client, rdbPool *cache.Client, registry *registry.HubReg
 		petModel:          &model.PetModel{DB: db, Cache: rdb},
 		userModel:         &model.UserModel{DB: db},
 		sessionTokenModel: &model.SessionTokenModel{DB: db},
+		visitorModel:      &model.VisitorModel{DB: db},
 		registry:          registry,
 		filepathRoot:      filepathRoot,
 		assetsRoot:        assetsRoot,
@@ -121,6 +123,7 @@ func (app *Config) Logger() *slog.Logger                        { return app.log
 func (app *Config) PetModel() *model.PetModel                   { return app.petModel }
 func (app *Config) UserModel() *model.UserModel                 { return app.userModel }
 func (app *Config) SessionTokenModel() *model.SessionTokenModel { return app.sessionTokenModel }
+func (app *Config) VisitorModel() *model.VisitorModel           { return app.visitorModel }
 func (app *Config) GetRegistry() *registry.HubRegistry          { return app.registry }
 func (app *Config) GetPort() string                             { return app.port }
 func (app *Config) GetFilepathRoot() string                     { return app.filepathRoot }

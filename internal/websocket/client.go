@@ -22,7 +22,8 @@ type Client struct {
 	// Buffered channel of outbound messages.
 	send chan []byte
 
-	UserID string
+	UserID  string
+	IsGuest bool
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -33,9 +34,6 @@ type Client struct {
 func (c *Client) readPump() {
 	defer func() {
 		c.hub.unregister <- c
-		if err := c.conn.Close(); err != nil {
-			log.Printf("error closing connection: %v\n", err)
-		}
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	err := c.conn.SetReadDeadline(time.Now().Add(pongWait))
@@ -53,7 +51,7 @@ func (c *Client) readPump() {
 			break
 		}
 		log.Printf("recv: %s\n", message)
-		env := transport.Envelope{Sender: c.UserID, Data: message}
+		env := transport.Envelope{Sender: c.UserID, IsGuest: c.IsGuest, Data: message}
 		c.hub.commands <- env
 	}
 }
@@ -67,9 +65,7 @@ func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		if err := c.conn.Close(); err != nil {
-			log.Printf("error closing connection: %v\n", err)
-		}
+		c.hub.unregister <- c
 	}()
 	for {
 		select {
@@ -82,10 +78,6 @@ func (c *Client) writePump() {
 
 			if !ok {
 				log.Printf("client %s's channel was closed\n", c.conn.RemoteAddr())
-				err = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				if err != nil {
-					log.Printf("error closing websocket: %v\n", err)
-				}
 				return
 			}
 

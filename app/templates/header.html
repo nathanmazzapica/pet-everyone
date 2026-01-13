@@ -1,6 +1,11 @@
 {{ define "header" }}
     <header>
-        <a href="/">Home</a>
-        <a href="/pet/create">Create Pet</a>
+        <nav class="nav-left">
+            <a href="/">Home</a>
+            <a href="/pet/create">Create Pet</a>
+        </nav>
+        <nav class="nav-right">
+            <a id="auth-link" class="btn btn-ghost" href="/login">Login</a>
+        </nav>
     </header>
 {{ end }}

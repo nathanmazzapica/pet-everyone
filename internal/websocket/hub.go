@@ -59,8 +59,11 @@ func (h *Hub) Run() {
 		case client := <-h.unregister:
 			h.mu.Lock()
 			if _, ok := h.clients[client]; ok {
-				delete(h.clients, client)
+				if err := client.conn.Close(); err != nil {
+					log.Printf("[HUB %s]: error closing client connection: %v", h.id, err)
+				}
 				close(client.send)
+				delete(h.clients, client)
 				log.Printf("[HUB %s]: DEREGISTERED CLIENT", h.id)
 
 			}
@@ -95,6 +98,8 @@ func (h *Hub) Run() {
 
 func (h *Hub) Clean() {
 	// Stop shutdown timer if it's running
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	if h.shutdownTimer != nil {
 		h.shutdownTimer.Stop()
 		h.shutdownTimer = nil

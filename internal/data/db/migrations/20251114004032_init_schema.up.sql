@@ -42,7 +42,7 @@ CREATE TABLE Pet (
 CREATE TABLE UserPetsClickCount
 (
     id SERIAL PRIMARY KEY NOT NULL,
-    click_count INT default 0,
+    click_count BIGINT default 0,
     pet_id      UUID NOT NULL,
     user_id     UUID,
     guest_id    UUID,
@@ -58,7 +58,9 @@ CREATE TABLE UserPetsClickCount
     ),
 
     CONSTRAINT pet_id_user_id_unique
-    UNIQUE (pet_id, user_id)
+    UNIQUE (pet_id, user_id),
+    CONSTRAINT pet_id_guest_id_unique
+    UNIQUE (pet_id, guest_id)
 );
 
 CREATE UNIQUE INDEX uniq_user_pet

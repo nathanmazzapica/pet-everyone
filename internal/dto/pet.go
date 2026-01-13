@@ -3,7 +3,7 @@ package dto
 type Pet struct {
 	PetName  string
 	PetID    string
-	PetCount int
+	PetCount int64
 	ImageURL string
 }
 
