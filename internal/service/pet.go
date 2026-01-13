@@ -132,16 +132,16 @@ func (s *PetService) persistCountsToDatabase(ctx context.Context) {
 }
 
 func (s *PetService) flushBuffer() {
+	// make a quick snapshot to minimize dbQueue lock time
 	s.mu.Lock()
 	snapshot := s.dbQueue
 	s.dbQueue = make(map[actorKey]uint64)
-	s.mu.Unlock()
+
+	const MAX_RETRY_QUEUE_SIZE = 5000
 
 	if s.pendingUpdates == nil {
 		s.pendingUpdates = make(map[actorKey]uint64)
 	}
-
-	const MAX_RETRY_QUEUE_SIZE = 5000
 
 	for actorKey, count := range snapshot {
 		_, exists := s.pendingUpdates[actorKey]
@@ -157,19 +157,25 @@ func (s *PetService) flushBuffer() {
 		}
 	}
 
+	toFlush := s.pendingUpdates
+	s.pendingUpdates = make(map[actorKey]uint64)
+	s.mu.Unlock()
+
 	failures := 0
-	for actorKey, count := range s.pendingUpdates {
+	for actorKey, count := range toFlush {
 		var err error
 		if actorKey.isGuest {
 			err = s.db.UpdatePetCountGuest(s.petID, actorKey.id, count)
 		} else {
 			err = s.db.UpdatePetCountUser(s.petID, actorKey.id, count)
 		}
-		if err == nil {
-			delete(s.pendingUpdates, actorKey)
-		} else {
-			log.Printf("[PET SERVICE %s]: ERROR flushing %d clicks for actor %+v: %s. Retrying next round\n", s.petID, count, actorKey, err)
+
+		if err != nil {
 			failures++
+			log.Printf("[PET SERVICE %s]: ERROR flushing %d clicks for actor %+v: %s. Retrying next round\n", s.petID, count, actorKey, err)
+			s.mu.Lock()
+			s.pendingUpdates[actorKey] += count
+			s.mu.Unlock()
 		}
 	}
 
