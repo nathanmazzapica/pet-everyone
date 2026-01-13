@@ -1,3 +1,4 @@
+const displayNameInput = document.getElementById("display-name-input");
 const emailInput = document.getElementById("email-input");
 const passwordInput = document.getElementById("password-input");
 const signupButton = document.getElementById("signup-button");
@@ -8,6 +9,7 @@ signupButton.addEventListener("click", async (e) => {
 });
 
 async function signup() {
+	const displayName = displayNameInput.value;
 	const email = emailInput.value;
 	const password = passwordInput.value;
 
@@ -18,21 +20,21 @@ async function signup() {
 			headers: {
 				"Content-Type": "application/json",
 			},
-			body: JSON.stringify({ email, password }),
+			body: JSON.stringify({ email, password, display_name: displayName }),
 		});
 
 		if (!res.ok) {
 			const contentType = res.headers.get("content-type") || "";
 			if (contentType.includes("application/json")) {
 				const errJson = await res.json();
-				const msg = errJson?.error || errJson?.message || JSON.stringify(errJson);
+				const msg = errJson?.error || errJson?.message || res.statusText || JSON.stringify(errJson);
 				console.error("Signup failed", msg);
 				alert(`Signup failed: ${msg}`);
 				return;
 			}
 			const errorText = await res.text();
 			console.error("Signup failed", errorText);
-			alert(`Signup failed: ${errorText || res.status}`);
+			alert(`Signup failed: ${errorText || res.statusText || res.status}`);
 			return;
 		}
 
