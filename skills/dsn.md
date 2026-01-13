@@ -4,6 +4,7 @@ Use the DSN generator script to produce a PostgreSQL DSN from a `.env` file.
 
 ## Command
 - `python3 scripts/py/dsn_generator/main.py --env <path-to-env>`
+- Run with no arguments to use the default `.env` in the repo root.
 
 ## Expected output (with standard dev env)
 - `postgres://devuser:devpass@localhost:5433/devdb?sslmode=disable`
