@@ -5,7 +5,7 @@ Generate a PostgreSQL DSN string from a `.env` file.
 ## Usage
 
 ```
-python3 scripts/py/dsn_generator/main.py --env .env
+python3 skills/dsn_generator/main.py --env .env
 ```
 
 Expected output for the provided configuration:
