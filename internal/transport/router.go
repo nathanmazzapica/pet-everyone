@@ -16,8 +16,12 @@ type Envelope struct {
 }
 
 type Command struct {
-	Type string      `json:"type"`
-	Data interface{} `json:"data"`
+	Type string          `json:"type"`
+	Data json.RawMessage `json:"data"`
+}
+
+type ChatCommandData struct {
+	Msg string `json:"msg"`
 }
 
 type Router struct {
@@ -53,6 +57,8 @@ func (r *Router) Route(ctx context.Context) {
 				continue
 			}
 
+			log.Println("CMD DATA:", cmd.Data)
+
 			switch cmd.Type {
 			case "pet":
 				err := r.petService.IncrementPetCount(service.Actor{
@@ -80,19 +86,16 @@ func (r *Router) Route(ctx context.Context) {
 				}
 
 			case "chat":
-				msgData, ok := cmd.Data.(map[string]interface{})
-				if !ok {
-					log.Println("error: chat command Data is not a map[string]interface{}", cmd.Data)
+				var data ChatCommandData
+				err := json.Unmarshal(cmd.Data, &data)
+
+				if err != nil {
+					// TODO: send feedback to user
+					log.Println("invalid chat command data")
 					continue
 				}
 
-				msg, ok := msgData["msg"].(string)
-				if !ok {
-					log.Println("error: chat command Data is missing 'msg' field", cmd.Data)
-					continue
-				}
-
-				chatMsg, err := r.chatService.ProcessMessage(msg, service.Actor{ID: env.Sender, IsGuest: env.IsGuest})
+				chatMsg, err := r.chatService.ProcessMessage(data.Msg, service.Actor{ID: env.Sender, IsGuest: env.IsGuest})
 				if err != nil {
 					log.Println("error processing chat message:", err)
 					continue
@@ -100,11 +103,8 @@ func (r *Router) Route(ctx context.Context) {
 
 				// Broadcast to all except sender
 				r.events <- Event{
-					Type: "chat",
-					Data: map[string]interface{}{
-						"msg":    chatMsg.Msg,
-						"author": chatMsg.Author,
-					},
+					Type:   "chat",
+					Data:   chatMsg,
 					Target: TargetExcept(env.Sender),
 				}
 
