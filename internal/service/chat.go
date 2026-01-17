@@ -18,8 +18,8 @@ func moderate(msg string) string {
 }
 
 type ChatMessage struct {
-	Msg    string
-	Author string
+	Msg    string `json:"msg"`
+	Author string `json:"author"`
 }
 
 func (c *ChatService) ProcessMessage(msg string, actor Actor) (ChatMessage, error) {
