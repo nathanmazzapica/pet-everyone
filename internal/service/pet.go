@@ -73,6 +73,7 @@ func NewPetService(ctx context.Context, petID string, model PetDatabase) *PetSer
 	return service
 }
 
+// TODO: update to return (userID, count)?
 func (s *PetService) IncrementPetCount(actor Actor) error {
 	key := keyForActor(actor)
 	s.mu.Lock()
