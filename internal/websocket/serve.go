@@ -23,7 +23,7 @@ var upgrader = websocket.Upgrader{
 		}
 
 		host := u.Hostname()
-		return host == "localhost" || host == "127.0.0.1"
+		return host == "localhost" || host == "127.0.0.1" || host == "peteveryone.com" || host == "www.peteveryone.com"
 	},
 }
 
