@@ -6,10 +6,21 @@ import (
 	"pet-everyone/cmd/web/application"
 	"pet-everyone/cmd/web/middleware"
 	"strings"
+	"time"
 )
+
+func wrap(next http.Handler, mw ...func(http.Handler) http.Handler) http.Handler {
+	for _, m := range mw {
+		next = m(next)
+	}
+	return next
+}
 
 func Routes(app *application.Config) *http.ServeMux {
 	authMiddleware := middleware.Auth(app)
+	limiterMiddleware := middleware.RateLimit(app, 1*time.Second, 100)
+	assetsLimiter := middleware.RateLimit(app, 5*time.Millisecond, 100)
+	petCreateLimiter := middleware.RateLimit(app, 10*time.Minute, 1)
 
 	log.Printf("filepathRoot: %s", app.GetFilepathRoot())
 	mux := http.NewServeMux()
@@ -20,9 +31,9 @@ func Routes(app *application.Config) *http.ServeMux {
 	mux.Handle("GET /app/", http.StripPrefix("/app", blockDirectoryListing(appFs)))
 
 	assetHandler := http.StripPrefix("/assets", blockDirectoryListing(assetFs))
-	mux.Handle("GET /assets/", assetHandler)
+	mux.Handle("GET /assets/", assetsLimiter(assetHandler))
 
-	mux.Handle("GET /", serveHome(app))
+	mux.Handle("GET /", limiterMiddleware(serveHome(app)))
 
 	mux.Handle("GET /login", serveLogin(app))
 	mux.Handle("GET /signup", serveSignup(app))
@@ -34,13 +45,19 @@ func Routes(app *application.Config) *http.ServeMux {
 		http.ServeFile(w, r, app.GetFilepathRoot()+"/pet/create.html")
 	})
 
-	mux.Handle("POST /api/login", handleLogin(app))
+	//mux.Handle("POST /api/login", handleLogin(app))
+	wrapped := wrap(handleLogin(app), authMiddleware, limiterMiddleware)
+	mux.Handle("POST /api/login", wrapped)
+
 	mux.Handle("POST /api/signup", handleSignup(app))
 	mux.Handle("POST /api/logout", handleLogout(app))
 	mux.Handle("POST /api/guest/recover", handleGuestRecover(app))
 	mux.Handle("GET /api/display-name", handleDisplayNameGet(app))
 	mux.Handle("PATCH /api/display-name", authMiddleware(handleDisplayNameSet(app)))
-	mux.Handle("POST /api/create", authMiddleware(handleCreatePet(app)))
+
+	wrappedPetCreate := wrap(handleCreatePet(app), limiterMiddleware, authMiddleware, petCreateLimiter)
+	mux.Handle("POST /api/create", wrappedPetCreate)
+	//mux.Handle("POST /api/create", authMiddleware(handleCreatePet(app)))
 	mux.Handle("GET /api/pet/{pet_id}/count", handlePersonalPetCount(app))
 
 	return mux

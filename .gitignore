@@ -1,6 +1,7 @@
 .env
 .idea/
 *.db
+bin/
 out
 assets/
 .DS_Store
