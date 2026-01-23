@@ -126,7 +126,7 @@ function pet() {
 }
 
 if (petContainer) {
-    petContainer.addEventListener('click', pet);
+    petContainer.addEventListener('pointerdown', pet);
 }
 
 // Chat UI
@@ -170,10 +170,10 @@ if (chatInput) {
 
 function setGradientPosition(dog = 'daisy') {
     if (!petContainer) return;
-	const rect = petContainer.getBoundingClientRect();
-	const centerX = rect.left + rect.width / 2;
-	const centerY = rect.top + rect.height / 2;
-	document.body.style.background = `radial-gradient(circle at ${centerX}px ${centerY}px, var(--${dog}-gradient-start) 1%, var(--${dog}-gradient-end) 100%)`;
+    const rect = petContainer.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    document.body.style.background = `radial-gradient(circle at ${centerX}px ${centerY}px, var(--${dog}-gradient-start) 1%, var(--${dog}-gradient-end) 100%)`;
 }
 
 
