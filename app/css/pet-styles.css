@@ -47,6 +47,7 @@ h3 {
     width: 30%;
     min-width: 400px;
     max-width: 900px;
+    touch-action: manipulation;
     z-index: 3;
 }
 
@@ -60,6 +61,7 @@ h3 {
     -webkit-user-select: none;
     -webkit-filter: drop-shadow(0px 5px 5px var(--daisy-shadow));
     filter: drop-shadow(0px 5px 5px var(--daisy-shadow));
+    touch-action: manipulation;
 }
 
 #daisy-image:hover {
