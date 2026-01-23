@@ -14,6 +14,7 @@ import (
 )
 
 type Config struct {
+	hostURL           string
 	petModel          *model.PetModel
 	userModel         *model.UserModel
 	sessionTokenModel *model.SessionTokenModel
@@ -25,10 +26,11 @@ type Config struct {
 	logger            *slog.Logger
 }
 
-func NewConfig(pool *db.Client, rdbPool *cache.Client, registry *registry.HubRegistry, filepathRoot string, assetsRoot string, port string) *Config {
+func NewConfig(hostURL string, pool *db.Client, rdbPool *cache.Client, registry *registry.HubRegistry, filepathRoot string, assetsRoot string, port string) *Config {
 	db := pool.DB()
 	rdb := rdbPool.RDB()
 	cfg := &Config{
+		hostURL:           hostURL,
 		petModel:          &model.PetModel{DB: db, Cache: rdb},
 		userModel:         &model.UserModel{DB: db},
 		sessionTokenModel: &model.SessionTokenModel{DB: db},
@@ -131,6 +133,7 @@ func (app *Config) UserModel() *model.UserModel                 { return app.use
 func (app *Config) SessionTokenModel() *model.SessionTokenModel { return app.sessionTokenModel }
 func (app *Config) VisitorModel() *model.VisitorModel           { return app.visitorModel }
 func (app *Config) GetRegistry() *registry.HubRegistry          { return app.registry }
+func (app *Config) GetHostURL() string                          { return app.hostURL }
 func (app *Config) GetPort() string                             { return app.port }
 func (app *Config) GetFilepathRoot() string                     { return app.filepathRoot }
 func (app *Config) GetAssetsRoot() string                       { return app.assetsRoot }

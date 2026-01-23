@@ -46,7 +46,7 @@ func (app *Config) GetAssetDiskPath(assetPath string) (string, error) {
 }
 
 func (app *Config) GetAssetURL(assetPath string) string {
-	return fmt.Sprintf("http://localhost:%s/assets/%s", app.GetPort(), assetPath)
+	return fmt.Sprintf("http://%s/assets/%s", app.GetHostURL(), assetPath)
 }
 
 func MediaTypeToExtension(mediaType string) string {

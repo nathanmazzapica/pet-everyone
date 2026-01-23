@@ -23,6 +23,12 @@ func main() {
 		panic(err)
 	}
 
+	hostURL := os.Getenv("HOST")
+	if hostURL == "" {
+		log.Println("[WARNING] 'HOST' env variable not set. Defaulting to localhost")
+		hostURL = "http://localhost:8082"
+	}
+
 	filepathRoot := os.Getenv("FILEPATH_ROOT")
 	if filepathRoot == "" {
 		log.Fatal("FILEPATH_ROOT environment variable not set")
@@ -55,6 +61,7 @@ func main() {
 	log.Println("Connected to redis in", time.Since(startTime).Round(time.Millisecond))
 
 	app := application.NewConfig(
+		hostURL,
 		client,
 		rdbClient,
 		registry.NewHubRegistry(&model.PetModel{DB: client.DB()}),
@@ -76,7 +83,7 @@ func main() {
 	}
 
 	log.Println("Started server in", time.Since(startTime).Round(time.Millisecond))
-	log.Printf("Serving on http://localhost:%s/app\n", port)
+	log.Printf("Serving on %s:%s/app\n", hostURL, port)
 	log.Fatal(srv.ListenAndServe())
 
 }
