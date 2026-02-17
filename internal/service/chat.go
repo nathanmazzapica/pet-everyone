@@ -1,5 +1,7 @@
 package service
 
+// TODO: implement LRU chat history for newly joined players
+
 import (
 	"log"
 )
