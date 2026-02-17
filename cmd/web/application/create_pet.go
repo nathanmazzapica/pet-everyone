@@ -22,7 +22,9 @@ func (app *Config) CreateNewPet(name string, img multipart.File, header *multipa
 		return "", err
 	}
 
-	if mediaType != "image/jpeg" && mediaType != "image/png" {
+	switch mediaType {
+	case "image/jpeg", "image/png", "image/heic":
+	default:
 		return "", errInvalidMediaType
 	}
 
