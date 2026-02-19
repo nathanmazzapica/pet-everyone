@@ -165,6 +165,9 @@ func (s *PetService) flushBuffer() {
 
 	failures := 0
 	for actorKey, count := range toFlush {
+		if count == 0 { // no need to persist a delta of 0
+			continue
+		}
 		var err error
 		if actorKey.isGuest {
 			err = s.db.UpdatePetCountGuest(s.petID, actorKey.id, count)
